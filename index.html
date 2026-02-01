@@ -709,6 +709,9 @@
             
             if (data.reply) {
                 addMessage(data.reply, 'ai');
+                if (data.audio && !isMuted) {
+                    playAudio(data.audio);
+                }
             } else {
                 addMessage("I'm sorry, I couldn't process that request.", 'ai');
             }
@@ -723,6 +726,20 @@
                 addMessage(fallback + " (Fallback Response)", 'ai');
             }, 500);
         }
+    }
+
+    function playAudio(base64Audio) {
+        if (isMuted) return;
+        muteBtn.classList.add('animate-pulse');
+        
+        const audioUrl = "data:audio/mp3;base64," + base64Audio;
+        const audio = new Audio(audioUrl);
+        
+        audio.onended = () => {
+             muteBtn.classList.remove('animate-pulse');
+        };
+        
+        audio.play().catch(e => console.error("Audio play failed", e));
     }
 
     function addMessage(text, sender) {
@@ -745,10 +762,8 @@
         messagesArea.appendChild(div);
         messagesArea.scrollTop = messagesArea.scrollHeight;
 
-        // Trigger speech if it's an AI message
-        if (sender === 'ai') {
-            speak(text);
-        }
+        // Note: Audio is now handled by the playAudio function called in sendMessage 
+        // to support the direct GPT-4o-Audio response format
     }
 
     function generateResponse(input) {

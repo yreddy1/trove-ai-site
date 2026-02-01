@@ -57,16 +57,20 @@ export default async function handler(req, res) {
 
   try {
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'gpt-4o-audio-preview',
+      modalities: ["text", "audio"],
+      audio: { voice: "alloy", format: "mp3" },
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: message },
       ],
-      max_tokens: 150, // Keep it short for voice
+      max_tokens: 200,
     });
 
-    const reply = completion.choices[0].message.content;
-    res.status(200).json({ reply });
+    const reply = completion.choices[0].message.audio.transcript;
+    const audioData = completion.choices[0].message.audio.data;
+
+    res.status(200).json({ reply, audio: audioData });
   } catch (error) {
     console.error('OpenAI Error:', error);
     // Fallback response if API fails (e.g., missing key)
