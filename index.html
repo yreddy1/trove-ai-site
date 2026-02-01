@@ -37,13 +37,19 @@
 
   <main class="relative z-10">
     <!-- HERO -->
-    <section class="mx-auto max-w-6xl px-6 pb-24 pt-24">
-      <div class="grid gap-12 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
+    <section class="relative mx-auto max-w-6xl px-6 pb-24 pt-24">
+        <!-- Background Image with Overlay -->
+        <div class="absolute inset-0 -z-10 overflow-hidden">
+            <div class="absolute inset-0 bg-trove-dark/90 lg:bg-gradient-to-r lg:from-trove-dark lg:via-trove-dark/95 lg:to-trove-dark/40 z-10"></div>
+            <img src="./DeepSenseIQ-MockUp-Horizontal-TM.png" alt="Intelligence Background" class="h-full w-full object-cover opacity-30 lg:opacity-50 blur-[2px]" />
+        </div>
+
+      <div class="grid gap-12 lg:grid-cols-[1.2fr_0.8fr] lg:items-center relative z-20">
         <div class="space-y-8">
-          <h1 class="text-5xl font-bold leading-tight tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-slate-500 md:text-6xl">
+          <h1 class="text-5xl font-bold leading-tight tracking-tight text-white md:text-6xl drop-shadow-lg">
             Intelligently Protecting Our Future
           </h1>
-          <p class="max-w-2xl text-lg leading-relaxed text-slate-400">
+          <p class="max-w-2xl text-lg leading-relaxed text-slate-300 drop-shadow-md">
             Trove delivers AI-powered solutions that strengthen safety, enhance security, improve access to critical data, and empower mission-critical decision-making for government, commercial, and care environments.
           </p>
           <div class="flex flex-wrap gap-4">
@@ -85,46 +91,70 @@
       </div>
 
       <div class="mt-10 grid gap-6 md:grid-cols-2">
-        <a href="./solutions.html" class="group relative rounded-2xl border border-white/10 bg-white/5 p-8 shadow-lg transition-all hover:-translate-y-1 hover:border-trove-lime/30 hover:bg-white/10 hover:shadow-trove-lime/5">
-          <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-          <h3 class="text-xl font-bold text-white group-hover:text-trove-lime transition-colors">CareIQ™</h3>
-          <p class="mt-2 text-sm font-semibold text-slate-300">Visibility Where Care Matters Most.</p>
-          <p class="mt-3 text-sm leading-relaxed text-slate-400">
-            CareIQ™ is Trove’s premier AI-powered monitoring system for childcare and development facilities.
-          </p>
-          <div class="mt-6 flex items-center text-sm font-semibold text-trove-lime opacity-80 group-hover:opacity-100">
-            Learn more 
-            <svg class="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+        <a href="./solutions.html" class="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-8 shadow-lg transition-all hover:-translate-y-1 hover:border-trove-lime/30 hover:shadow-trove-lime/5">
+          <!-- Background Image -->
+          <div class="absolute inset-0 z-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500">
+            <img src="./CareIQ Horizontal-TM.png" alt="CareIQ" class="h-full w-full object-cover object-center" />
+          </div>
+          <div class="absolute inset-0 z-0 bg-gradient-to-t from-trove-dark via-transparent to-transparent opacity-90"></div>
+          
+          <div class="relative z-10">
+            <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <h3 class="text-xl font-bold text-white group-hover:text-trove-lime transition-colors">CareIQ™</h3>
+            <p class="mt-2 text-sm font-semibold text-slate-300">Visibility Where Care Matters Most.</p>
+            <p class="mt-3 text-sm leading-relaxed text-slate-400">
+              CareIQ™ is Trove’s premier AI-powered monitoring system for childcare and development facilities.
+            </p>
+            <div class="mt-6 flex items-center text-sm font-semibold text-trove-lime opacity-80 group-hover:opacity-100">
+              Learn more 
+              <svg class="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+            </div>
           </div>
         </a>
 
-        <a href="./solutions.html" class="group relative rounded-2xl border border-white/10 bg-white/5 p-8 shadow-lg transition-all hover:-translate-y-1 hover:border-trove-lime/30 hover:bg-white/10 hover:shadow-trove-lime/5">
-          <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-          <h3 class="text-xl font-bold text-white group-hover:text-trove-lime transition-colors">DeepSenseIQ™</h3>
-          <p class="mt-2 text-sm font-semibold text-slate-300">From Seeing to Sensing. From Data to Discernment.</p>
-          <p class="mt-3 text-sm leading-relaxed text-slate-400">
-            DeepSenseIQ™ is Trove’s multi-sensor intelligence engine that turns fragmented signals into decision-ready insight.
-          </p>
-          <div class="mt-6 flex items-center text-sm font-semibold text-trove-lime opacity-80 group-hover:opacity-100">
-            Learn more 
-            <svg class="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+        <a href="./solutions.html" class="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-8 shadow-lg transition-all hover:-translate-y-1 hover:border-trove-lime/30 hover:shadow-trove-lime/5">
+          <!-- Background Image -->
+          <div class="absolute inset-0 z-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500">
+            <img src="./DeepSenseIQ-MockUp-Horizontal-TM.png" alt="DeepSenseIQ" class="h-full w-full object-cover object-center" />
+          </div>
+          <div class="absolute inset-0 z-0 bg-gradient-to-t from-trove-dark via-transparent to-transparent opacity-90"></div>
+
+          <div class="relative z-10">
+            <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <h3 class="text-xl font-bold text-white group-hover:text-trove-lime transition-colors">DeepSenseIQ™</h3>
+            <p class="mt-2 text-sm font-semibold text-slate-300">From Seeing to Sensing. From Data to Discernment.</p>
+            <p class="mt-3 text-sm leading-relaxed text-slate-400">
+              DeepSenseIQ™ is Trove’s multi-sensor intelligence engine that turns fragmented signals into decision-ready insight.
+            </p>
+            <div class="mt-6 flex items-center text-sm font-semibold text-trove-lime opacity-80 group-hover:opacity-100">
+              Learn more 
+              <svg class="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+            </div>
           </div>
         </a>
 
-        <a href="./solutions.html" class="group relative rounded-2xl border border-white/10 bg-white/5 p-8 shadow-lg transition-all hover:-translate-y-1 hover:border-trove-lime/30 hover:bg-white/10 hover:shadow-trove-lime/5">
-          <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-          <h3 class="text-xl font-bold text-white group-hover:text-trove-lime transition-colors">CyberIQ™</h3>
-          <p class="mt-2 text-sm font-semibold text-slate-300">AI That Helps You Act, Not Just Alert.</p>
-          <p class="mt-3 text-sm leading-relaxed text-slate-400">
-            CyberIQ™ transforms cybersecurity from reactive to predictive.
-          </p>
-          <div class="mt-6 flex items-center text-sm font-semibold text-trove-lime opacity-80 group-hover:opacity-100">
-            Learn more 
-            <svg class="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+        <a href="./solutions.html" class="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-8 shadow-lg transition-all hover:-translate-y-1 hover:border-trove-lime/30 hover:shadow-trove-lime/5">
+          <!-- Background Image -->
+          <div class="absolute inset-0 z-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500">
+            <img src="./CyberIQ-MockUp-Horizontal-TM.png" alt="CyberIQ" class="h-full w-full object-cover object-center" />
+          </div>
+          <div class="absolute inset-0 z-0 bg-gradient-to-t from-trove-dark via-transparent to-transparent opacity-90"></div>
+
+          <div class="relative z-10">
+            <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <h3 class="text-xl font-bold text-white group-hover:text-trove-lime transition-colors">CyberIQ™</h3>
+            <p class="mt-2 text-sm font-semibold text-slate-300">AI That Helps You Act, Not Just Alert.</p>
+            <p class="mt-3 text-sm leading-relaxed text-slate-400">
+              CyberIQ™ transforms cybersecurity from reactive to predictive.
+            </p>
+            <div class="mt-6 flex items-center text-sm font-semibold text-trove-lime opacity-80 group-hover:opacity-100">
+              Learn more 
+              <svg class="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+            </div>
           </div>
         </a>
 
-        <a href="./solutions.html" class="group relative rounded-2xl border border-white/10 bg-white/5 p-8 shadow-lg transition-all hover:-translate-y-1 hover:border-trove-lime/30 hover:bg-white/10 hover:shadow-trove-lime/5">
+        <a href="./solutions.html" class="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-8 shadow-lg transition-all hover:-translate-y-1 hover:border-trove-lime/30 hover:shadow-trove-lime/5">
           <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
           <h3 class="text-xl font-bold text-white group-hover:text-trove-lime transition-colors">LEXSO™ with Constellis</h3>
           <p class="mt-2 text-sm font-semibold text-slate-300">Respond at the Speed of Sensing.</p>
