@@ -511,9 +511,15 @@
             <div class="flex h-2 w-2 rounded-full bg-trove-lime animate-pulse"></div>
             <span class="font-bold text-white">Trove Assistant</span>
         </div>
-        <button onclick="toggleAssistant()" class="text-slate-400 hover:text-white">
-            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-        </button>
+        <div class="flex items-center gap-2">
+            <!-- Mute Toggle -->
+            <button id="mute-btn" onclick="toggleMute()" class="text-trove-lime hover:text-white transition-colors" title="Toggle Voice Response">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>
+            </button>
+            <button onclick="toggleAssistant()" class="text-slate-400 hover:text-white">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+        </div>
       </div>
 
       <!-- Messages Area -->
@@ -558,7 +564,9 @@
     const messagesArea = document.getElementById('ai-messages');
     const inputField = document.getElementById('ai-input');
     const micBtn = document.getElementById('mic-btn');
+    const muteBtn = document.getElementById('mute-btn');
     let isListening = false;
+    let isMuted = false;
     let recognition;
 
     // Initialize Speech Recognition if available
@@ -605,6 +613,32 @@
         }
     }
 
+    function toggleMute() {
+        isMuted = !isMuted;
+        if (isMuted) {
+            window.speechSynthesis.cancel(); // Stop talking immediately if muted
+            muteBtn.classList.add('text-slate-500');
+            muteBtn.classList.remove('text-trove-lime', 'hover:text-white');
+            muteBtn.title = "Unmute Voice Response";
+        } else {
+            muteBtn.classList.remove('text-slate-500');
+            muteBtn.classList.add('text-trove-lime', 'hover:text-white');
+            muteBtn.title = "Mute Voice Response";
+        }
+    }
+
+    function speak(text) {
+        if (isMuted) return;
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel(); // Cancel any previous speech
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+
     function handleKeyPress(e) {
         if (e.key === 'Enter') sendMessage();
     }
@@ -643,6 +677,11 @@
         
         messagesArea.appendChild(div);
         messagesArea.scrollTop = messagesArea.scrollHeight;
+
+        // Trigger speech if it's an AI message
+        if (sender === 'ai') {
+            speak(text);
+        }
     }
 
     function generateResponse(input) {
