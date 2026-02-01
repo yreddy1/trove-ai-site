@@ -64,7 +64,7 @@ export default async function handler(req, res) {
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: message },
       ],
-      max_tokens: 500,
+      max_tokens: 2000,
     });
 
     const reply = completion.choices[0].message.audio.transcript;
