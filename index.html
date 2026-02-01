@@ -499,5 +499,162 @@
       </div>
     </div>
   </footer>
+
+  <!-- AI ASSISTANT WIDGET -->
+  <div id="ai-assistant-widget" class="fixed bottom-6 left-6 z-50 flex flex-col items-start gap-4">
+    
+    <!-- Chat Window (Initially Hidden) -->
+    <div id="ai-chat-window" class="hidden w-80 overflow-hidden rounded-2xl border border-white/10 bg-trove-dark/90 text-sm shadow-2xl backdrop-blur-md transition-all">
+      <!-- Header -->
+      <div class="flex items-center justify-between bg-white/5 px-4 py-3 border-b border-white/5">
+        <div class="flex items-center gap-2">
+            <div class="flex h-2 w-2 rounded-full bg-trove-lime animate-pulse"></div>
+            <span class="font-bold text-white">Trove Assistant</span>
+        </div>
+        <button onclick="toggleAssistant()" class="text-slate-400 hover:text-white">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+
+      <!-- Messages Area -->
+      <div id="ai-messages" class="h-64 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-white/10">
+        <!-- Initial Message -->
+        <div class="flex gap-3">
+            <div class="h-8 w-8 shrink-0 rounded-full bg-trove-lime/20 flex items-center justify-center text-trove-lime">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+            </div>
+            <div class="rounded-2xl rounded-tl-none bg-white/5 p-3 text-slate-300">
+                Hello. I can help you navigate our solutions or answer questions about Trove's capabilities. What would you like to know?
+            </div>
+        </div>
+      </div>
+
+      <!-- Input Area -->
+      <div class="border-t border-white/5 bg-white/5 p-3">
+        <div class="flex items-center gap-2 rounded-lg bg-trove-dark/50 px-3 py-2 border border-white/10 focus-within:border-trove-lime/50 transition-colors">
+            <input type="text" id="ai-input" placeholder="Type or speak..." class="w-full bg-transparent text-white placeholder-slate-500 focus:outline-none" onkeypress="handleKeyPress(event)">
+            <button id="mic-btn" onclick="toggleSpeech()" class="text-slate-400 hover:text-trove-lime transition-colors">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+            </button>
+            <button onclick="sendMessage()" class="text-trove-lime hover:text-white transition-colors">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+            </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toggle Button -->
+    <button onclick="toggleAssistant()" class="group relative flex h-14 w-14 items-center justify-center rounded-full bg-trove-lime text-trove-dark shadow-lg shadow-trove-lime/20 transition-all hover:scale-110 hover:shadow-trove-lime/40">
+        <span class="absolute -top-1 -right-1 flex h-4 w-4">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-4 w-4 bg-red-500 border-2 border-trove-dark"></span>
+        </span>
+        <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+    </button>
+  </div>
+
+  <script>
+    const chatWindow = document.getElementById('ai-chat-window');
+    const messagesArea = document.getElementById('ai-messages');
+    const inputField = document.getElementById('ai-input');
+    const micBtn = document.getElementById('mic-btn');
+    let isListening = false;
+    let recognition;
+
+    // Initialize Speech Recognition if available
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.lang = 'en-US';
+
+        recognition.onstart = function() {
+            isListening = true;
+            micBtn.classList.add('text-red-500', 'animate-pulse');
+            micBtn.classList.remove('text-slate-400', 'hover:text-trove-lime');
+        };
+
+        recognition.onend = function() {
+            isListening = false;
+            micBtn.classList.remove('text-red-500', 'animate-pulse');
+            micBtn.classList.add('text-slate-400', 'hover:text-trove-lime');
+        };
+
+        recognition.onresult = function(event) {
+            const transcript = event.results[0][0].transcript;
+            inputField.value = transcript;
+            sendMessage();
+        };
+    } else {
+        micBtn.style.display = 'none'; // Hide if not supported
+    }
+
+    function toggleAssistant() {
+        chatWindow.classList.toggle('hidden');
+        if (!chatWindow.classList.contains('hidden')) {
+            inputField.focus();
+        }
+    }
+
+    function toggleSpeech() {
+        if (!recognition) return;
+        if (isListening) {
+            recognition.stop();
+        } else {
+            recognition.start();
+        }
+    }
+
+    function handleKeyPress(e) {
+        if (e.key === 'Enter') sendMessage();
+    }
+
+    function sendMessage() {
+        const text = inputField.value.trim();
+        if (!text) return;
+
+        // User Message
+        addMessage(text, 'user');
+        inputField.value = '';
+
+        // Simulate AI Response (Simple keyword matching)
+        setTimeout(() => {
+            const response = generateResponse(text);
+            addMessage(response, 'ai');
+        }, 600 + Math.random() * 800);
+    }
+
+    function addMessage(text, sender) {
+        const div = document.createElement('div');
+        div.className = 'flex gap-3 ' + (sender === 'user' ? 'flex-row-reverse' : '');
+        
+        const avatar = sender === 'ai' 
+            ? `<div class="h-8 w-8 shrink-0 rounded-full bg-trove-lime/20 flex items-center justify-center text-trove-lime"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg></div>`
+            : `<div class="h-8 w-8 shrink-0 rounded-full bg-white/10 flex items-center justify-center text-white"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg></div>`;
+
+        const bubbleClass = sender === 'ai' 
+            ? 'rounded-2xl rounded-tl-none bg-white/5 p-3 text-slate-300' 
+            : 'rounded-2xl rounded-tr-none bg-trove-lime p-3 text-trove-dark font-medium';
+
+        div.innerHTML = `
+            ${avatar}
+            <div class="${bubbleClass}">${text}</div>
+        `;
+        
+        messagesArea.appendChild(div);
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+    }
+
+    function generateResponse(input) {
+        const lower = input.toLowerCase();
+        if (lower.includes('price') || lower.includes('cost')) return "Pricing depends on the scale of deployment. Would you like me to connect you with our sales team?";
+        if (lower.includes('care') || lower.includes('school') || lower.includes('child')) return "CareIQ™ is designed specifically for childcare and education safety. It uses privacy-first AI to monitor for safety incidents.";
+        if (lower.includes('cyber') || lower.includes('hack')) return "CyberIQ™ moves beyond simple alerts to predictive threat intelligence. It correlates signals across your entire network.";
+        if (lower.includes('contact') || lower.includes('email') || lower.includes('talk')) return "You can reach us at info@trove-ai.com or visit our Contact page.";
+        if (lower.includes('hello') || lower.includes('hi')) return "Hello there! How can I assist you with Trove's solutions today?";
+        if (lower.includes('lexso') || lower.includes('constellis')) return "LEXSO™ is our strategic partnership with Constellis, combining their operational expertise with our DeepSenseIQ platform.";
+        return "I understand. Our team of experts can provide more details on that. Would you like to schedule a consultation?";
+    }
+  </script>
 </body>
 </html>
