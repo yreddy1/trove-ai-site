@@ -627,15 +627,40 @@
         }
     }
 
-    function speak(text) {
+    async function speak(text) {
         if (isMuted) return;
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel(); // Cancel any previous speech
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'en-US';
-            utterance.rate = 1.0;
-            utterance.pitch = 1.0;
-            window.speechSynthesis.speak(utterance);
+
+        // Visual indicator that audio is loading/playing (optional, but good UX)
+        muteBtn.classList.add('animate-pulse');
+
+        try {
+            const response = await fetch('/api/speak', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text })
+            });
+
+            if (!response.ok) throw new Error('Network response was not ok');
+
+            const blob = await response.blob();
+            const audioUrl = URL.createObjectURL(blob);
+            const audio = new Audio(audioUrl);
+            
+            audio.onended = () => {
+                muteBtn.classList.remove('animate-pulse');
+                URL.revokeObjectURL(audioUrl); // Cleanup
+            };
+
+            await audio.play();
+        } catch (error) {
+            console.error('TTS Error:', error);
+            muteBtn.classList.remove('animate-pulse');
+            
+            // Fallback to browser TTS if OpenAI fails
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                window.speechSynthesis.speak(utterance);
+            }
         }
     }
 
