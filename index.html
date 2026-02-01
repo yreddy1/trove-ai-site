@@ -11,6 +11,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="./dist/output.css" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    /* Markdown Styles for Chat */
+    .markdown-body strong { font-weight: 700; color: white; }
+    .markdown-body p { margin-bottom: 0.5rem; }
+    .markdown-body p:last-child { margin-bottom: 0; }
+    .markdown-body ul, .markdown-body ol { margin-left: 1.25rem; list-style-type: disc; margin-bottom: 0.5rem; }
+    .markdown-body li { margin-bottom: 0.25rem; }
+  </style>
 </head>
 <body class="min-h-screen bg-trove-dark font-sans text-slate-300 antialiased selection:bg-trove-lime selection:text-trove-dark">
   <!-- BACKGROUND GLOW -->
@@ -754,9 +763,14 @@
             ? 'rounded-2xl rounded-tl-none bg-white/5 p-3 text-slate-300' 
             : 'rounded-2xl rounded-tr-none bg-trove-lime p-3 text-trove-dark font-medium';
 
+        // Parse Markdown for AI messages
+        const content = sender === 'ai' && typeof marked !== 'undefined' 
+            ? marked.parse(text) 
+            : text;
+
         div.innerHTML = `
             ${avatar}
-            <div class="${bubbleClass}">${text}</div>
+            <div class="${bubbleClass} markdown-body text-sm leading-relaxed">${content}</div>
         `;
         
         messagesArea.appendChild(div);
