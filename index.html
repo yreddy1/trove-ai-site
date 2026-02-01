@@ -643,7 +643,7 @@
         if (e.key === 'Enter') sendMessage();
     }
 
-    function sendMessage() {
+    async function sendMessage() {
         const text = inputField.value.trim();
         if (!text) return;
 
@@ -651,11 +651,53 @@
         addMessage(text, 'user');
         inputField.value = '';
 
-        // Simulate AI Response (Simple keyword matching)
-        setTimeout(() => {
-            const response = generateResponse(text);
-            addMessage(response, 'ai');
-        }, 600 + Math.random() * 800);
+        // Show loading state (optional: add a "..." bubble)
+        const loadingDiv = document.createElement('div');
+        loadingDiv.id = 'ai-loading';
+        loadingDiv.className = 'flex gap-3';
+        loadingDiv.innerHTML = `
+            <div class="h-8 w-8 shrink-0 rounded-full bg-trove-lime/20 flex items-center justify-center text-trove-lime animate-pulse">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+            </div>
+            <div class="rounded-2xl rounded-tl-none bg-white/5 p-3 text-slate-300">
+                <span class="inline-flex gap-1">
+                    <span class="animate-bounce delay-0">.</span>
+                    <span class="animate-bounce delay-100">.</span>
+                    <span class="animate-bounce delay-200">.</span>
+                </span>
+            </div>
+        `;
+        messagesArea.appendChild(loadingDiv);
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text })
+            });
+
+            const data = await response.json();
+            
+            // Remove loading bubble
+            messagesArea.removeChild(loadingDiv);
+            
+            if (data.reply) {
+                addMessage(data.reply, 'ai');
+            } else {
+                addMessage("I'm sorry, I couldn't process that request.", 'ai');
+            }
+        } catch (error) {
+            console.error('Chat Error:', error);
+            messagesArea.removeChild(loadingDiv);
+            addMessage("I'm having trouble connecting right now (Offline Mode).", 'ai');
+            
+            // Fallback to local logic for offline/demo purposes
+            setTimeout(() => {
+                const fallback = generateResponse(text);
+                addMessage(fallback + " (Fallback Response)", 'ai');
+            }, 500);
+        }
     }
 
     function addMessage(text, sender) {
