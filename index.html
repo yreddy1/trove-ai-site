@@ -19,11 +19,53 @@
     .markdown-body p:last-child { margin-bottom: 0; }
     .markdown-body ul, .markdown-body ol { margin-left: 1.25rem; list-style-type: disc; margin-bottom: 0.5rem; }
     .markdown-body li { margin-bottom: 0.25rem; }
+
+    /* Ambient Background Motion */
+    .ambient-cubes {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .ambient-cube {
+      position: absolute;
+      width: var(--size);
+      height: var(--size);
+      border: 1px solid rgba(161, 195, 78, 0.12);
+      background: linear-gradient(135deg, rgba(161, 195, 78, 0.08), rgba(59, 130, 246, 0.04));
+      box-shadow: 0 0 18px rgba(161, 195, 78, 0.12);
+      transform: translate3d(var(--x0), var(--y0), 0) rotate(var(--r0));
+      opacity: var(--o0);
+      animation: cube-drift var(--dur) ease-in-out infinite;
+      animation-delay: var(--delay);
+    }
+    .ambient-cube::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transform: translate3d(4px, 4px, 0);
+      opacity: 0.35;
+    }
+    @keyframes cube-drift {
+      0% {
+        transform: translate3d(var(--x0), var(--y0), 0) rotate(var(--r0));
+        opacity: var(--o0);
+      }
+      50% { opacity: var(--o1); }
+      100% {
+        transform: translate3d(var(--x1), var(--y1), 0) rotate(var(--r1));
+        opacity: var(--o0);
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .ambient-cube { animation: none; }
+    }
   </style>
 </head>
 <body class="min-h-screen bg-trove-dark font-sans text-slate-300 antialiased selection:bg-trove-lime selection:text-trove-dark">
   <!-- BACKGROUND GLOW -->
   <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+    <div id="ambient-cubes" class="ambient-cubes"></div>
     <div class="absolute inset-0 bg-grid opacity-[0.15]"></div>
     <div class="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-trove-lime/10 blur-[120px] rounded-full opacity-50"></div>
     <div class="absolute bottom-[-10%] right-[-10%] w-[800px] h-[600px] bg-blue-500/5 blur-[120px] rounded-full opacity-30"></div>
@@ -569,6 +611,47 @@
   </div>
 
   <script src="./chatbot.js"></script>
+  <script>
+    (function () {
+      const container = document.getElementById('ambient-cubes');
+      if (!container) return;
+
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (prefersReducedMotion) return;
+
+      const cubeCount = 28;
+      for (let i = 0; i < cubeCount; i += 1) {
+        const cube = document.createElement('span');
+        cube.className = 'ambient-cube';
+
+        const size = 18 + Math.random() * 34;
+        const x0 = Math.random() * 100;
+        const y0 = Math.random() * 100;
+        const x1 = (x0 + (Math.random() * 40 - 20) + 100) % 100;
+        const y1 = (y0 + (Math.random() * 40 - 20) + 100) % 100;
+        const r0 = Math.random() * 60 - 30;
+        const r1 = r0 + (Math.random() * 40 - 20);
+        const dur = 18 + Math.random() * 20;
+        const delay = -Math.random() * dur;
+        const o0 = 0.06 + Math.random() * 0.14;
+        const o1 = Math.min(o0 + 0.12, 0.32);
+
+        cube.style.setProperty('--size', `${size}px`);
+        cube.style.setProperty('--x0', `${x0}vw`);
+        cube.style.setProperty('--y0', `${y0}vh`);
+        cube.style.setProperty('--x1', `${x1}vw`);
+        cube.style.setProperty('--y1', `${y1}vh`);
+        cube.style.setProperty('--r0', `${r0}deg`);
+        cube.style.setProperty('--r1', `${r1}deg`);
+        cube.style.setProperty('--dur', `${dur}s`);
+        cube.style.setProperty('--delay', `${delay}s`);
+        cube.style.setProperty('--o0', o0.toFixed(2));
+        cube.style.setProperty('--o1', o1.toFixed(2));
+
+        container.appendChild(cube);
+      }
+    })();
+  </script>
 
 </body>
 </html>
