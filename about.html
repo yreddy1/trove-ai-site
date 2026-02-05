@@ -11,6 +11,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="./dist/output.css" />
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    /* Markdown Styles for Chat */
+    .markdown-body strong { font-weight: 700; color: white; }
+    .markdown-body p { margin-bottom: 0.5rem; }
+    .markdown-body p:last-child { margin-bottom: 0; }
+    .markdown-body ul, .markdown-body ol { margin-left: 1.25rem; list-style-type: disc; margin-bottom: 0.5rem; }
+    .markdown-body li { margin-bottom: 0.25rem; }
+  </style>
 </head>
 <body class="min-h-screen bg-trove-dark font-sans text-slate-300 antialiased">
   <!-- HEADER -->
@@ -112,5 +122,65 @@
   <footer class="border-t border-white/10 bg-trove-dark py-8">
     <div class="mx-auto max-w-6xl px-6 text-center text-xs text-slate-500">© 2025 Trove-AI</div>
   </footer>
+<!-- AI ASSISTANT WIDGET -->
+  <div id="ai-assistant-widget" class="fixed bottom-6 left-6 z-50 flex flex-col items-start gap-4">
+    
+    <!-- Chat Window (Initially Hidden) -->
+    <div id="ai-chat-window" class="hidden w-80 overflow-hidden rounded-2xl border border-white/10 bg-trove-dark/90 text-sm shadow-2xl backdrop-blur-md transition-all">
+      <!-- Header -->
+      <div class="flex items-center justify-between bg-white/5 px-4 py-3 border-b border-white/5">
+        <div class="flex items-center gap-2">
+            <div class="flex h-2 w-2 rounded-full bg-trove-lime animate-pulse"></div>
+            <span class="font-bold text-white">Trove Assistant</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <!-- Mute Toggle -->
+            <button id="mute-btn" onclick="toggleMute()" class="text-trove-lime hover:text-white transition-colors" title="Toggle Voice Response">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>
+            </button>
+            <button onclick="toggleAssistant()" class="text-slate-400 hover:text-white">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+        </div>
+      </div>
+
+      <!-- Messages Area -->
+      <div id="ai-messages" class="h-64 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-white/10">
+        <!-- Initial Message -->
+        <div class="flex gap-3">
+            <div class="h-8 w-8 shrink-0 rounded-full bg-trove-lime/20 flex items-center justify-center text-trove-lime">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+            </div>
+            <div class="rounded-2xl rounded-tl-none bg-white/5 p-3 text-slate-300">
+                Hello. I can help you navigate our solutions or answer questions about Trove's capabilities. What would you like to know?
+            </div>
+        </div>
+      </div>
+
+      <!-- Input Area -->
+      <div class="border-t border-white/5 bg-white/5 p-3">
+        <div class="flex items-center gap-2 rounded-lg bg-trove-dark/50 px-3 py-2 border border-white/10 focus-within:border-trove-lime/50 transition-colors">
+            <input type="text" id="ai-input" placeholder="Type or speak..." class="w-full bg-transparent text-white placeholder-slate-500 focus:outline-none" onkeypress="handleKeyPress(event)">
+            <button id="mic-btn" onclick="toggleSpeech()" class="text-slate-400 hover:text-trove-lime transition-colors">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+            </button>
+            <button onclick="sendMessage()" class="text-trove-lime hover:text-white transition-colors">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+            </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toggle Button -->
+    <button onclick="toggleAssistant()" class="group relative flex h-14 w-14 items-center justify-center rounded-full bg-trove-lime text-trove-dark shadow-lg shadow-trove-lime/20 transition-all hover:scale-110 hover:shadow-trove-lime/40">
+        <span class="absolute -top-1 -right-1 flex h-4 w-4">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-4 w-4 bg-red-500 border-2 border-trove-dark"></span>
+        </span>
+        <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+    </button>
+  </div>
+
+  <script src="./chatbot.js"></script>
 </body>
 </html>
