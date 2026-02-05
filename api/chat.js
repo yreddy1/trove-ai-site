@@ -16,16 +16,28 @@ function getNavigationIntent(message) {
   if (matches.length === 0) return null;
 
   if (matches.includes('contact')) {
-    return { navigate_to: 'contact', message: 'Navigating to the contact page to connect with our team.' };
+    return {
+      navigate_to: 'contact',
+      message: 'We can connect you with our team for demos, pricing, or partnerships. Taking you to the Contact page.'
+    };
   }
   if (matches.includes('solutions')) {
-    return { navigate_to: 'solutions', message: 'Navigating to the solutions page for product and technology details.' };
+    return {
+      navigate_to: 'solutions',
+      message: 'We offer platforms like CareIQ, DeepSenseIQ, CyberIQ, and DataIQ for mission-critical operations. Taking you to the Solutions page.'
+    };
   }
   if (matches.includes('about')) {
-    return { navigate_to: 'about', message: 'Navigating to the about page for company information.' };
+    return {
+      navigate_to: 'about',
+      message: 'Our mission is to deliver AI-powered solutions for safety, security, and mission-critical decision-making. Taking you to the About page.'
+    };
   }
   if (matches.includes('home')) {
-    return { navigate_to: 'home', message: 'Navigating to the home page for an overview.' };
+    return {
+      navigate_to: 'home',
+      message: 'Here is a quick overview of Trove and LEXSO. Taking you to the home page now.'
+    };
   }
 
   return null;
