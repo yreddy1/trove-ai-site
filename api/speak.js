@@ -17,8 +17,9 @@ export default async function handler(req, res) {
 
   try {
     const mp3 = await openai.audio.speech.create({
-      model: "tts-1",
-      voice: "alloy", // Options: alloy, echo, fable, onyx, nova, shimmer
+      model: "gpt-4o-mini-tts",
+      voice: "marin",
+      instructions: "Speak in clear, professional English with a slight German accent. Keep the tone warm, confident, and concise.",
       input: text,
     });
 
