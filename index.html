@@ -661,9 +661,15 @@
     <div id="ai-chat-window" class="hidden w-80 overflow-hidden rounded-2xl border border-white/10 bg-trove-dark/90 text-sm shadow-2xl backdrop-blur-md transition-all">
       <!-- Header -->
       <div class="flex items-center justify-between bg-white/5 px-4 py-3 border-b border-white/5">
-        <div class="flex items-center gap-2">
-            <div class="flex h-2 w-2 rounded-full bg-trove-lime animate-pulse"></div>
-            <span class="font-bold text-white">Trove Assistant</span>
+        <div class="flex items-center gap-3">
+            <div class="relative">
+              <img src="./greta.jpg" alt="Greta" class="h-8 w-8 rounded-full object-cover border border-white/10" />
+              <span class="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-trove-lime ring-2 ring-trove-dark animate-pulse"></span>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-white">Greta</div>
+              <div class="text-[10px] uppercase tracking-[0.2em] text-slate-400">Trove AI Guide</div>
+            </div>
         </div>
         <div class="flex items-center gap-2">
             <!-- Mute Toggle -->
@@ -673,6 +679,17 @@
             <button onclick="toggleAssistant()" class="text-slate-400 hover:text-white">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
+        </div>
+      </div>
+
+      <div class="border-b border-white/5 bg-white/[0.03] px-4 py-3">
+        <div class="flex items-center gap-3">
+          <img src="./greta.jpg" alt="Greta" class="h-12 w-12 rounded-xl object-cover border border-white/10" />
+          <div>
+            <div class="text-sm font-semibold text-white">Greta</div>
+            <div class="text-xs text-slate-400">Trove AI Guide</div>
+            <div class="text-[11px] text-slate-500">Ask me about mission, solutions, or connecting with our team.</div>
+          </div>
         </div>
       </div>
 

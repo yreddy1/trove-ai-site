@@ -6,6 +6,7 @@
   const inputField = document.getElementById('ai-input');
   const micBtn = document.getElementById('mic-btn');
   const muteBtn = document.getElementById('mute-btn');
+  const GRETA_AVATAR_SRC = './greta.jpg';
   const PENDING_SPEECH_KEY = 'trove_pending_speech';
 
   let isListening = false;
@@ -249,7 +250,7 @@
     div.className = 'flex gap-3 ' + (sender === 'user' ? 'flex-row-reverse' : '');
 
     const avatar = sender === 'ai'
-      ? '<div class="h-8 w-8 shrink-0 rounded-full bg-trove-lime/20 flex items-center justify-center text-trove-lime"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg></div>'
+      ? `<div class="h-8 w-8 shrink-0 rounded-full overflow-hidden border border-white/10 bg-white/5"><img src="${GRETA_AVATAR_SRC}" alt="Greta" class="h-full w-full object-cover" /></div>`
       : '<div class="h-8 w-8 shrink-0 rounded-full bg-white/10 flex items-center justify-center text-white"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg></div>';
 
     const bubbleClass = sender === 'ai'
