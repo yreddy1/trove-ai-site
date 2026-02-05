@@ -31,6 +31,23 @@
     .ambient-layer.is-active {
       opacity: 1;
     }
+    .ambient-scan {
+      position: absolute;
+      inset: -20% 0;
+      pointer-events: none;
+      background: linear-gradient(180deg, transparent, rgba(161, 195, 78, 0.16), transparent);
+      opacity: 0.28;
+      mix-blend-mode: screen;
+      animation: scan-sweep 18s linear infinite;
+    }
+    .ambient-scan::after {
+      content: "";
+      position: absolute;
+      inset: 30% 0 -30%;
+      background: linear-gradient(180deg, transparent, rgba(59, 130, 246, 0.12), transparent);
+      opacity: 0.35;
+      animation: scan-sweep 22s linear infinite reverse;
+    }
     .ambient-cube {
       position: absolute;
       width: var(--size);
@@ -117,10 +134,30 @@
         opacity: var(--o0);
       }
     }
+    .ambient-pulse {
+      position: absolute;
+      width: var(--size);
+      height: var(--size);
+      border-radius: 999px;
+      border: 1px solid rgba(161, 195, 78, 0.4);
+      background: radial-gradient(circle, rgba(161, 195, 78, 0.25), rgba(59, 130, 246, 0.06) 45%, transparent 70%);
+      filter: blur(0.2px);
+      transform: translate3d(var(--x), var(--y), 0) scale(0.25);
+      opacity: 0;
+      animation: pulse-expand 3.6s ease-out forwards;
+      mix-blend-mode: screen;
+    }
+    @keyframes pulse-expand {
+      0% { opacity: 0; transform: translate3d(var(--x), var(--y), 0) scale(0.2); }
+      18% { opacity: 0.6; }
+      100% { opacity: 0; transform: translate3d(var(--x), var(--y), 0) scale(1); }
+    }
     @media (prefers-reduced-motion: reduce) {
       .ambient-cube,
       .domino-tile,
-      .electric-line { animation: none; }
+      .electric-line,
+      .ambient-scan,
+      .ambient-pulse { animation: none; }
     }
   </style>
 </head>
@@ -130,6 +167,7 @@
     <div id="ambient-cubes" class="ambient-layer"></div>
     <div id="ambient-dominoes" class="ambient-layer"></div>
     <div id="ambient-electric" class="ambient-layer"></div>
+    <div class="ambient-scan"></div>
     <div class="absolute inset-0 bg-grid opacity-[0.15]"></div>
     <div class="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-trove-lime/10 blur-[120px] rounded-full opacity-50"></div>
     <div class="absolute bottom-[-10%] right-[-10%] w-[800px] h-[600px] bg-blue-500/5 blur-[120px] rounded-full opacity-30"></div>
@@ -849,7 +887,36 @@
         }, wait);
       }
 
+      function spawnPulse() {
+        if (prefersReducedMotion) return;
+        const layer = layers[activeIndex];
+        if (!layer || !layer.el) return;
+        const pulse = document.createElement('span');
+        pulse.className = 'ambient-pulse';
+
+        const size = 160 + Math.random() * 220;
+        const x = Math.random() * 100;
+        const y = Math.random() * 100;
+
+        pulse.style.setProperty('--size', `${size}px`);
+        pulse.style.setProperty('--x', `${x}vw`);
+        pulse.style.setProperty('--y', `${y}vh`);
+
+        layer.el.appendChild(pulse);
+        pulse.addEventListener('animationend', () => pulse.remove());
+      }
+
+      function schedulePulse() {
+        if (prefersReducedMotion) return;
+        const wait = 4500 + Math.random() * 6500;
+        setTimeout(() => {
+          spawnPulse();
+          schedulePulse();
+        }, wait);
+      }
+
       scheduleSwitch();
+      schedulePulse();
     })();
   </script>
 
