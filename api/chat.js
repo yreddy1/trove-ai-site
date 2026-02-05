@@ -68,14 +68,14 @@ function getNavigationIntent(message) {
   if (patterns.contact.test(text)) {
     return {
       navigate_to: 'contact',
-      message: 'We can connect you with our team for demos, pricing, or partnerships. Taking you to the Contact page.'
+      message: 'We can connect you with our team for demos, pricing, or partnerships.'
     };
   }
 
   if (/\blexso\b/.test(text)) {
     return {
       navigate_to: 'home',
-      message: 'LEXSO is our strategic partnership with Constellis, combining operational expertise with our AI platform. Taking you to the Home page.'
+      message: 'LEXSO is our strategic partnership with Constellis, combining operational expertise with our AI platform.'
     };
   }
 
@@ -90,19 +90,19 @@ function getNavigationIntent(message) {
   if (patterns.solutions.test(text)) {
     return {
       navigate_to: 'solutions',
-      message: 'We offer platforms like CareIQ, DeepSenseIQ, CyberIQ, and DataIQ for mission-critical operations. Taking you to the Solutions page.'
+      message: 'We offer platforms like CareIQ, DeepSenseIQ, CyberIQ, and DataIQ for mission-critical operations.'
     };
   }
   if (patterns.about.test(text)) {
     return {
       navigate_to: 'about',
-      message: 'Our mission is to deliver AI-powered solutions for safety, security, and mission-critical decision-making. Taking you to the About page.'
+      message: 'Our mission is to deliver AI-powered solutions for safety, security, and mission-critical decision-making.'
     };
   }
   if (patterns.home.test(text)) {
     return {
       navigate_to: 'home',
-      message: 'Here is a quick overview of Trove and LEXSO. Taking you to the Home page.'
+      message: 'Here is a quick overview of Trove and LEXSO.'
     };
   }
 
