@@ -20,9 +20,37 @@
     .markdown-body p:last-child { margin-bottom: 0; }
     .markdown-body ul, .markdown-body ol { margin-left: 1.25rem; list-style-type: disc; margin-bottom: 0.5rem; }
     .markdown-body li { margin-bottom: 0.25rem; }
+
+    /* Contact Flow Background */
+    .contact-flow-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      mix-blend-mode: screen;
+      opacity: 0.6;
+    }
+    .contact-flow-veil {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 70% 45%, rgba(161, 195, 78, 0.12), transparent 55%),
+        radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.08), transparent 50%),
+        linear-gradient(180deg, rgba(7, 10, 15, 0.15), rgba(7, 10, 15, 0.7));
+      pointer-events: none;
+      opacity: 0.7;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .contact-flow-canvas { display: none; }
+    }
   </style>
 </head>
 <body class="min-h-screen bg-trove-dark font-sans text-slate-300 antialiased">
+  <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+    <canvas id="contact-flow" class="contact-flow-canvas"></canvas>
+    <div class="contact-flow-veil"></div>
+  </div>
   <!-- HEADER -->
   <header class="sticky top-0 z-40 border-b border-white/10 bg-trove-dark">
     <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
@@ -38,7 +66,7 @@
     </div>
   </header>
 
-  <main>
+  <main class="relative z-10">
     <!-- HERO -->
     <section class="mx-auto max-w-6xl px-6 pb-10 pt-20">
       <div class="space-y-6">
@@ -103,7 +131,7 @@
   </main>
 
   <!-- FOOTER -->
-  <footer class="border-t border-white/10 bg-trove-dark py-8">
+  <footer class="relative z-10 border-t border-white/10 bg-trove-dark py-8">
     <div class="mx-auto max-w-6xl px-6 text-center text-xs text-slate-500">© 2025 Trove-AI</div>
   </footer>
 <!-- AI ASSISTANT WIDGET -->
@@ -170,6 +198,180 @@
         <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
     </button>
   </div>
+
+  <script>
+    (function () {
+      const canvas = document.getElementById('contact-flow');
+      if (!canvas) return;
+
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (prefersReducedMotion) return;
+
+      const ctx = canvas.getContext('2d');
+      let width = 0;
+      let height = 0;
+      let dpr = 1;
+      let nodes = [];
+      let edges = [];
+      let packets = [];
+      let hubIndex = 0;
+      let lastTime = 0;
+
+      const settings = {
+        nodeCount: 18,
+        neighbors: 3,
+        packetCount: 14,
+        speedMin: 0.08,
+        speedMax: 0.2
+      };
+
+      function resize() {
+        const rect = canvas.getBoundingClientRect();
+        width = rect.width;
+        height = rect.height;
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.max(1, Math.floor(width * dpr));
+        canvas.height = Math.max(1, Math.floor(height * dpr));
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        buildNetwork();
+      }
+
+      function buildNetwork() {
+        nodes = [];
+        const margin = 80;
+        nodes.push({ x: width * 0.72, y: height * 0.48, fixed: true });
+        hubIndex = 0;
+
+        for (let i = 1; i < settings.nodeCount; i += 1) {
+          const bias = i % 3 === 0 ? 0.35 : 0.5;
+          const x = margin + Math.random() * (width - margin * 2) * bias + (width * 0.15);
+          const y = margin + Math.random() * (height - margin * 2);
+          nodes.push({ x, y, fixed: false });
+        }
+
+        edges = [];
+        for (let i = 0; i < nodes.length; i += 1) {
+          const distances = nodes
+            .map((node, idx) => ({ idx, dist: (node.x - nodes[i].x) ** 2 + (node.y - nodes[i].y) ** 2 }))
+            .filter((entry) => entry.idx !== i)
+            .sort((a, b) => a.dist - b.dist)
+            .slice(0, settings.neighbors);
+
+          distances.forEach((entry) => addEdge(i, entry.idx));
+        }
+
+        const hubTargets = nodes
+          .map((node, idx) => ({ idx, dist: (node.x - nodes[hubIndex].x) ** 2 + (node.y - nodes[hubIndex].y) ** 2 }))
+          .filter((entry) => entry.idx !== hubIndex)
+          .sort((a, b) => a.dist - b.dist)
+          .slice(0, 6);
+        hubTargets.forEach((entry) => addEdge(hubIndex, entry.idx));
+
+        packets = Array.from({ length: settings.packetCount }, () => makePacket());
+      }
+
+      function addEdge(a, b) {
+        const [from, to] = a < b ? [a, b] : [b, a];
+        if (edges.find((edge) => edge.a === from && edge.b === to)) return;
+        edges.push({ a: from, b: to });
+      }
+
+      function makePacket() {
+        const edgeIndex = Math.floor(Math.random() * edges.length);
+        return {
+          edgeIndex,
+          t: Math.random(),
+          speed: settings.speedMin + Math.random() * (settings.speedMax - settings.speedMin),
+          direction: Math.random() > 0.5 ? 1 : -1,
+          color: Math.random() > 0.6 ? 'lime' : 'blue'
+        };
+      }
+
+      function stepPacket(packet, dt) {
+        packet.t += packet.speed * (dt / 16) * packet.direction;
+        if (packet.t >= 1 || packet.t <= 0) {
+          const edge = edges[packet.edgeIndex];
+          const nextNode = packet.t >= 1 ? edge.b : edge.a;
+          const nextEdges = edges.filter((e) => e.a === nextNode || e.b === nextNode);
+          if (nextEdges.length) {
+            packet.edgeIndex = edges.indexOf(nextEdges[Math.floor(Math.random() * nextEdges.length)]);
+          } else {
+            packet.edgeIndex = Math.floor(Math.random() * edges.length);
+          }
+          packet.t = packet.t >= 1 ? 0 : 1;
+          packet.direction = packet.t === 0 ? 1 : -1;
+        }
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, width, height);
+
+        ctx.lineWidth = 1;
+        edges.forEach((edge) => {
+          const a = nodes[edge.a];
+          const b = nodes[edge.b];
+          ctx.strokeStyle = 'rgba(148, 163, 184, 0.12)';
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        });
+
+        const time = performance.now() * 0.001;
+        const hub = nodes[hubIndex];
+        const ring = 12 + Math.sin(time * 1.6) * 4;
+        ctx.strokeStyle = 'rgba(161, 195, 78, 0.25)';
+        ctx.beginPath();
+        ctx.arc(hub.x, hub.y, ring, 0, Math.PI * 2);
+        ctx.stroke();
+
+        packets.forEach((packet) => {
+          const edge = edges[packet.edgeIndex];
+          const a = nodes[edge.a];
+          const b = nodes[edge.b];
+          const t = packet.t;
+          const x = a.x + (b.x - a.x) * t;
+          const y = a.y + (b.y - a.y) * t;
+          const tailT = Math.max(0, t - 0.08 * packet.direction);
+          const tx = a.x + (b.x - a.x) * tailT;
+          const ty = a.y + (b.y - a.y) * tailT;
+          const color = packet.color === 'lime' ? 'rgba(161, 195, 78, 0.8)' : 'rgba(96, 165, 250, 0.8)';
+
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(tx, ty);
+          ctx.lineTo(x, y);
+          ctx.stroke();
+
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(x, y, 2, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        nodes.forEach((node, idx) => {
+          const base = idx === hubIndex ? 0.7 : 0.3;
+          ctx.fillStyle = `rgba(203, 213, 225, ${base})`;
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, idx === hubIndex ? 3.5 : 2, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      }
+
+      function animate(time) {
+        const dt = Math.min(40, time - lastTime || 16);
+        lastTime = time;
+        packets.forEach((packet) => stepPacket(packet, dt));
+        draw();
+        requestAnimationFrame(animate);
+      }
+
+      resize();
+      window.addEventListener('resize', resize);
+      requestAnimationFrame(animate);
+    })();
+  </script>
 
   <script src="./chatbot.js"></script>
 </body>
