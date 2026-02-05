@@ -20,9 +20,37 @@
     .markdown-body p:last-child { margin-bottom: 0; }
     .markdown-body ul, .markdown-body ol { margin-left: 1.25rem; list-style-type: disc; margin-bottom: 0.5rem; }
     .markdown-body li { margin-bottom: 0.25rem; }
+
+    /* Ant Colony Optimization Background */
+    .aco-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      mix-blend-mode: screen;
+      opacity: 0.8;
+    }
+    .aco-overlay {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(161, 195, 78, 0.15), transparent 45%),
+        radial-gradient(circle at 80% 30%, rgba(59, 130, 246, 0.12), transparent 50%),
+        linear-gradient(180deg, rgba(7, 10, 15, 0.1), rgba(7, 10, 15, 0.6));
+      pointer-events: none;
+      opacity: 0.8;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .aco-canvas { display: none; }
+    }
   </style>
 </head>
 <body class="min-h-screen bg-trove-dark font-sans text-slate-300 antialiased">
+  <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+    <canvas id="aco-canvas" class="aco-canvas"></canvas>
+    <div class="aco-overlay"></div>
+  </div>
   <!-- HEADER -->
   <header class="sticky top-0 z-40 border-b border-white/10 bg-trove-dark">
     <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
@@ -38,7 +66,7 @@
     </div>
   </header>
 
-  <main>
+  <main class="relative z-10">
     <!-- HERO -->
     <section class="mx-auto max-w-6xl px-6 pb-16 pt-20">
       <div class="space-y-6">
@@ -171,7 +199,7 @@
   </main>
 
   <!-- FOOTER -->
-  <footer class="border-t border-white/10 bg-trove-dark py-8">
+  <footer class="relative z-10 border-t border-white/10 bg-trove-dark py-8">
     <div class="mx-auto max-w-6xl px-6 text-center text-xs text-slate-500">© 2025 Trove-AI</div>
   </footer>
 <!-- AI ASSISTANT WIDGET -->
@@ -232,6 +260,194 @@
         <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
     </button>
   </div>
+
+  <script>
+    (function () {
+      const canvas = document.getElementById('aco-canvas');
+      if (!canvas) return;
+
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (prefersReducedMotion) return;
+
+      const ctx = canvas.getContext('2d');
+      let width = 0;
+      let height = 0;
+      let dpr = 1;
+      let cols = 0;
+      let rows = 0;
+      let field = new Float32Array();
+      let ants = [];
+      let food = [];
+      let lastTime = 0;
+
+      const settings = {
+        antCount: 140,
+        speed: 1.2,
+        sensorAngle: 0.5,
+        sensorDistance: 16,
+        turnSpeed: 0.22,
+        evaporate: 0.985,
+        deposit: 0.7,
+      };
+
+      function resize() {
+        const rect = canvas.getBoundingClientRect();
+        width = rect.width;
+        height = rect.height;
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.max(1, Math.floor(width * dpr));
+        canvas.height = Math.max(1, Math.floor(height * dpr));
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        const cell = Math.max(6, Math.floor(Math.min(width, height) / 90));
+        cols = Math.max(1, Math.floor(width / cell));
+        rows = Math.max(1, Math.floor(height / cell));
+        field = new Float32Array(cols * rows);
+        settings.sensorDistance = cell * 2.4;
+        resetFood();
+        resetAnts();
+      }
+
+      function resetFood() {
+        const count = width < 900 ? 2 : 3;
+        food = Array.from({ length: count }, () => ({
+          x: width * (0.25 + Math.random() * 0.5),
+          y: height * (0.25 + Math.random() * 0.5),
+        }));
+      }
+
+      function resetAnts() {
+        const nestX = width * 0.5;
+        const nestY = height * 0.5;
+        ants = Array.from({ length: settings.antCount }, () => ({
+          x: nestX + (Math.random() - 0.5) * 40,
+          y: nestY + (Math.random() - 0.5) * 40,
+          dir: Math.random() * Math.PI * 2,
+          hasFood: false,
+        }));
+      }
+
+      function idxFromPos(x, y) {
+        const cx = Math.max(0, Math.min(cols - 1, Math.floor(x / (width / cols))));
+        const cy = Math.max(0, Math.min(rows - 1, Math.floor(y / (height / rows))));
+        return cy * cols + cx;
+      }
+
+      function sampleField(x, y) {
+        return field[idxFromPos(x, y)] || 0;
+      }
+
+      function addPheromone(x, y, amount) {
+        const idx = idxFromPos(x, y);
+        field[idx] = Math.min(1.4, field[idx] + amount);
+      }
+
+      function wrap(value, max) {
+        if (value < 0) return value + max;
+        if (value > max) return value - max;
+        return value;
+      }
+
+      function nearestFood(x, y) {
+        let closest = food[0];
+        let dist = Infinity;
+        for (const spot of food) {
+          const dx = spot.x - x;
+          const dy = spot.y - y;
+          const d = dx * dx + dy * dy;
+          if (d < dist) {
+            dist = d;
+            closest = spot;
+          }
+        }
+        return closest;
+      }
+
+      function lerpAngle(a, b, t) {
+        const diff = ((b - a + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+        return a + diff * t;
+      }
+
+      function update(time) {
+        const dt = Math.min(34, time - lastTime || 16);
+        lastTime = time;
+
+        ctx.fillStyle = 'rgba(7, 10, 15, 0.08)';
+        ctx.fillRect(0, 0, width, height);
+
+        for (let i = 0; i < field.length; i += 1) {
+          field[i] *= settings.evaporate;
+        }
+
+        const nestX = width * 0.5;
+        const nestY = height * 0.5;
+
+        for (const ant of ants) {
+          const speed = settings.speed * (dt / 16);
+          const angle = ant.dir;
+          const left = sampleField(
+            ant.x + Math.cos(angle - settings.sensorAngle) * settings.sensorDistance,
+            ant.y + Math.sin(angle - settings.sensorAngle) * settings.sensorDistance
+          );
+          const forward = sampleField(
+            ant.x + Math.cos(angle) * settings.sensorDistance,
+            ant.y + Math.sin(angle) * settings.sensorDistance
+          );
+          const right = sampleField(
+            ant.x + Math.cos(angle + settings.sensorAngle) * settings.sensorDistance,
+            ant.y + Math.sin(angle + settings.sensorAngle) * settings.sensorDistance
+          );
+
+          let turn = 0;
+          if (left > forward && left > right) turn = -settings.turnSpeed;
+          else if (right > forward && right > left) turn = settings.turnSpeed;
+          else if (forward < Math.max(left, right)) turn = right > left ? settings.turnSpeed : -settings.turnSpeed;
+
+          ant.dir += turn + (Math.random() - 0.5) * 0.06;
+
+          const target = ant.hasFood ? { x: nestX, y: nestY } : nearestFood(ant.x, ant.y);
+          const desired = Math.atan2(target.y - ant.y, target.x - ant.x);
+          ant.dir = lerpAngle(ant.dir, desired, ant.hasFood ? 0.08 : 0.04);
+
+          const prevX = ant.x;
+          const prevY = ant.y;
+          ant.x = wrap(ant.x + Math.cos(ant.dir) * speed, width);
+          ant.y = wrap(ant.y + Math.sin(ant.dir) * speed, height);
+
+          addPheromone(ant.x, ant.y, ant.hasFood ? settings.deposit : settings.deposit * 0.3);
+
+          const distToFood = Math.hypot(target.x - ant.x, target.y - ant.y);
+          if (!ant.hasFood && distToFood < 24) {
+            ant.hasFood = true;
+          }
+          const distToNest = Math.hypot(nestX - ant.x, nestY - ant.y);
+          if (ant.hasFood && distToNest < 26) {
+            ant.hasFood = false;
+          }
+
+          ctx.strokeStyle = ant.hasFood ? 'rgba(161, 195, 78, 0.55)' : 'rgba(120, 200, 255, 0.35)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(prevX, prevY);
+          ctx.lineTo(ant.x, ant.y);
+          ctx.stroke();
+        }
+
+        for (const spot of food) {
+          ctx.fillStyle = 'rgba(161, 195, 78, 0.35)';
+          ctx.beginPath();
+          ctx.arc(spot.x, spot.y, 3.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        requestAnimationFrame(update);
+      }
+
+      resize();
+      window.addEventListener('resize', resize);
+      requestAnimationFrame(update);
+    })();
+  </script>
 
   <script src="./chatbot.js"></script>
 </body>
