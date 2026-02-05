@@ -277,11 +277,12 @@
       let rows = 0;
       let field = new Float32Array();
       let ants = [];
+      let colonies = [];
       let food = [];
       let lastTime = 0;
 
       const settings = {
-        antCount: 140,
+        antCount: 180,
         speed: 1.2,
         sensorAngle: 0.5,
         sensorDistance: 16,
@@ -289,6 +290,17 @@
         evaporate: 0.985,
         deposit: 0.7,
       };
+
+      const palette = [
+        { r: 161, g: 195, b: 78 },
+        { r: 120, g: 200, b: 255 },
+        { r: 232, g: 149, b: 255 },
+        { r: 120, g: 255, b: 208 },
+      ];
+
+      function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+      }
 
       function resize() {
         const rect = canvas.getBoundingClientRect();
@@ -304,27 +316,60 @@
         rows = Math.max(1, Math.floor(height / cell));
         field = new Float32Array(cols * rows);
         settings.sensorDistance = cell * 2.4;
+        resetColonies();
         resetFood();
         resetAnts();
       }
 
+      function resetColonies() {
+        const count = width < 900 ? 3 : 4;
+        const cx = width * 0.5;
+        const cy = height * 0.5;
+        const radius = Math.min(width, height) * 0.28;
+        colonies = Array.from({ length: count }, (_, idx) => {
+          const angle = (idx / count) * Math.PI * 2 + Math.random() * 0.5;
+          const distance = radius * (0.75 + Math.random() * 0.25);
+          const color = palette[idx % palette.length];
+          return {
+            x: cx + Math.cos(angle) * distance,
+            y: cy + Math.sin(angle) * distance * 0.7,
+            color
+          };
+        });
+      }
+
       function resetFood() {
-        const count = width < 900 ? 2 : 3;
-        food = Array.from({ length: count }, () => ({
-          x: width * (0.25 + Math.random() * 0.5),
-          y: height * (0.25 + Math.random() * 0.5),
-        }));
+        const perColony = width < 900 ? 2 : 3;
+        const spread = Math.min(width, height) * 0.24;
+        food = [];
+        colonies.forEach((colony, colonyIndex) => {
+          for (let i = 0; i < perColony; i += 1) {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = spread * (0.8 + Math.random() * 0.6);
+            const fx = clamp(colony.x + Math.cos(angle) * dist, 40, width - 40);
+            const fy = clamp(colony.y + Math.sin(angle) * dist, 40, height - 40);
+            food.push({ x: fx, y: fy, colony: colonyIndex });
+          }
+        });
       }
 
       function resetAnts() {
-        const nestX = width * 0.5;
-        const nestY = height * 0.5;
-        ants = Array.from({ length: settings.antCount }, () => ({
-          x: nestX + (Math.random() - 0.5) * 40,
-          y: nestY + (Math.random() - 0.5) * 40,
-          dir: Math.random() * Math.PI * 2,
-          hasFood: false,
-        }));
+        ants = [];
+        const baseCount = Math.floor(settings.antCount / colonies.length);
+        let remainder = settings.antCount - baseCount * colonies.length;
+        colonies.forEach((colony, colonyIndex) => {
+          const count = baseCount + (remainder > 0 ? 1 : 0);
+          if (remainder > 0) remainder -= 1;
+          for (let i = 0; i < count; i += 1) {
+            ants.push({
+              x: colony.x + (Math.random() - 0.5) * 60,
+              y: colony.y + (Math.random() - 0.5) * 60,
+              dir: Math.random() * Math.PI * 2,
+              hasFood: false,
+              colony: colonyIndex
+            });
+          }
+        });
       }
 
       function idxFromPos(x, y) {
@@ -348,10 +393,11 @@
         return value;
       }
 
-      function nearestFood(x, y) {
-        let closest = food[0];
+      function nearestFood(x, y, colonyIndex) {
+        let closest = null;
         let dist = Infinity;
         for (const spot of food) {
+          if (spot.colony !== colonyIndex) continue;
           const dx = spot.x - x;
           const dy = spot.y - y;
           const d = dx * dx + dy * dy;
@@ -360,7 +406,7 @@
             closest = spot;
           }
         }
-        return closest;
+        return closest || food[0];
       }
 
       function lerpAngle(a, b, t) {
@@ -379,10 +425,8 @@
           field[i] *= settings.evaporate;
         }
 
-        const nestX = width * 0.5;
-        const nestY = height * 0.5;
-
         for (const ant of ants) {
+          const colony = colonies[ant.colony];
           const speed = settings.speed * (dt / 16);
           const angle = ant.dir;
           const left = sampleField(
@@ -405,7 +449,9 @@
 
           ant.dir += turn + (Math.random() - 0.5) * 0.06;
 
-          const target = ant.hasFood ? { x: nestX, y: nestY } : nearestFood(ant.x, ant.y);
+          const target = ant.hasFood
+            ? { x: colony.x, y: colony.y }
+            : nearestFood(ant.x, ant.y, ant.colony);
           const desired = Math.atan2(target.y - ant.y, target.x - ant.x);
           ant.dir = lerpAngle(ant.dir, desired, ant.hasFood ? 0.08 : 0.04);
 
@@ -420,12 +466,15 @@
           if (!ant.hasFood && distToFood < 24) {
             ant.hasFood = true;
           }
-          const distToNest = Math.hypot(nestX - ant.x, nestY - ant.y);
+          const distToNest = Math.hypot(colony.x - ant.x, colony.y - ant.y);
           if (ant.hasFood && distToNest < 26) {
             ant.hasFood = false;
           }
 
-          ctx.strokeStyle = ant.hasFood ? 'rgba(161, 195, 78, 0.55)' : 'rgba(120, 200, 255, 0.35)';
+          const color = colony.color;
+          ctx.strokeStyle = ant.hasFood
+            ? `rgba(${color.r}, ${color.g}, ${color.b}, 0.6)`
+            : `rgba(${color.r}, ${color.g}, ${color.b}, 0.35)`;
           ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.moveTo(prevX, prevY);
@@ -434,9 +483,36 @@
         }
 
         for (const spot of food) {
-          ctx.fillStyle = 'rgba(161, 195, 78, 0.35)';
+          const color = colonies[spot.colony].color;
+          ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, 0.35)`;
           ctx.beginPath();
           ctx.arc(spot.x, spot.y, 3.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        for (const colony of colonies) {
+          const glow = ctx.createRadialGradient(colony.x, colony.y, 0, colony.x, colony.y, 70);
+          glow.addColorStop(0, `rgba(${colony.color.r}, ${colony.color.g}, ${colony.color.b}, 0.45)`);
+          glow.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = glow;
+          ctx.beginPath();
+          ctx.arc(colony.x, colony.y, 70, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = `rgba(${colony.color.r}, ${colony.color.g}, ${colony.color.b}, 0.8)`;
+          ctx.beginPath();
+          ctx.arc(colony.x, colony.y, 4.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        for (const spot of food) {
+          const color = colonies[spot.colony].color;
+          const glow = ctx.createRadialGradient(spot.x, spot.y, 0, spot.x, spot.y, 50);
+          glow.addColorStop(0, `rgba(${color.r}, ${color.g}, ${color.b}, 0.4)`);
+          glow.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = glow;
+          ctx.beginPath();
+          ctx.arc(spot.x, spot.y, 50, 0, Math.PI * 2);
           ctx.fill();
         }
 
