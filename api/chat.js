@@ -4,17 +4,50 @@ const openai = process.env.OPENAI_API_KEY
   ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
   : null;
 
+async function detectLanguage(userMessage) {
+  if (!openai) return 'en';
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      temperature: 0,
+      messages: [
+        {
+          role: 'system',
+          content:
+            "Detect the user's language and respond with the ISO 639-1 language code (e.g., en, es, fr, de). If unsure, respond with 'en'. Return only the code."
+        },
+        {
+          role: 'user',
+          content: userMessage
+        }
+      ],
+    });
+
+    const code = completion.choices?.[0]?.message?.content?.trim().toLowerCase();
+    if (code && /^[a-z]{2}$/.test(code)) return code;
+  } catch (error) {
+    console.error('Language Detection Error:', error);
+  }
+
+  return 'en';
+}
+
 async function localizeMessage(message, userMessage) {
   if (!openai) return message;
 
   try {
+    const language = await detectLanguage(userMessage);
+    if (language === 'en') return message;
+
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       temperature: 0.2,
       messages: [
         {
           role: 'system',
-          content: 'Translate the assistant response into the language used by the user. If the user wrote in English, return the response unchanged. Return only the translated text without quotes or extra commentary.'
+          content:
+            `Translate the assistant response into language code "${language}". Preserve product names (CareIQ, VisualIQ, DeepSenseIQ, CyberIQ, DataIQ, LEXSO, Trove) and any URLs or email addresses. Return only the translated text without quotes or extra commentary.`
         },
         {
           role: 'user',
