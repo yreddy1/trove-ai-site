@@ -21,10 +21,15 @@
     .markdown-body li { margin-bottom: 0.25rem; }
 
     /* Ambient Background Motion */
-    .ambient-cubes {
+    .ambient-layer {
       position: absolute;
       inset: 0;
       pointer-events: none;
+      opacity: 0;
+      transition: opacity 1.4s ease;
+    }
+    .ambient-layer.is-active {
+      opacity: 1;
     }
     .ambient-cube {
       position: absolute;
@@ -57,15 +62,74 @@
         opacity: var(--o0);
       }
     }
+    .domino-tile {
+      position: absolute;
+      width: var(--w);
+      height: var(--h);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(161, 195, 78, 0.08));
+      box-shadow: 0 0 16px rgba(161, 195, 78, 0.08);
+      transform: translate3d(var(--x0), var(--y0), 0) rotate(var(--r0));
+      opacity: var(--o0);
+      animation: domino-wave var(--dur) ease-in-out infinite;
+      animation-delay: var(--delay);
+    }
+    @keyframes domino-wave {
+      0% {
+        transform: translate3d(var(--x0), var(--y0), 0) rotate(var(--r0));
+        opacity: var(--o0);
+      }
+      50% {
+        transform: translate3d(calc(var(--x0) + var(--dx)), calc(var(--y0) + var(--dy)), 0) rotate(var(--r1));
+        opacity: var(--o1);
+      }
+      100% {
+        transform: translate3d(var(--x0), var(--y0), 0) rotate(var(--r0));
+        opacity: var(--o0);
+      }
+    }
+    .electric-line {
+      position: absolute;
+      width: var(--len);
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.6), rgba(161, 195, 78, 0.45), transparent);
+      opacity: var(--o0);
+      transform: translate3d(var(--x0), var(--y0), 0) rotate(var(--r0));
+      filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.35));
+      animation: electric-drift var(--dur) ease-in-out infinite;
+      animation-delay: var(--delay);
+    }
+    .electric-line::after {
+      content: "";
+      position: absolute;
+      inset: -1px 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+      opacity: 0.3;
+    }
+    @keyframes electric-drift {
+      0% {
+        transform: translate3d(var(--x0), var(--y0), 0) rotate(var(--r0));
+        opacity: var(--o0);
+      }
+      50% { opacity: var(--o1); }
+      100% {
+        transform: translate3d(var(--x1), var(--y1), 0) rotate(var(--r1));
+        opacity: var(--o0);
+      }
+    }
     @media (prefers-reduced-motion: reduce) {
-      .ambient-cube { animation: none; }
+      .ambient-cube,
+      .domino-tile,
+      .electric-line { animation: none; }
     }
   </style>
 </head>
 <body class="min-h-screen bg-trove-dark font-sans text-slate-300 antialiased selection:bg-trove-lime selection:text-trove-dark">
   <!-- BACKGROUND GLOW -->
   <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-    <div id="ambient-cubes" class="ambient-cubes"></div>
+    <div id="ambient-cubes" class="ambient-layer"></div>
+    <div id="ambient-dominoes" class="ambient-layer"></div>
+    <div id="ambient-electric" class="ambient-layer"></div>
     <div class="absolute inset-0 bg-grid opacity-[0.15]"></div>
     <div class="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-trove-lime/10 blur-[120px] rounded-full opacity-50"></div>
     <div class="absolute bottom-[-10%] right-[-10%] w-[800px] h-[600px] bg-blue-500/5 blur-[120px] rounded-full opacity-30"></div>
@@ -613,43 +677,179 @@
   <script src="./chatbot.js"></script>
   <script>
     (function () {
-      const container = document.getElementById('ambient-cubes');
-      if (!container) return;
-
       const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (prefersReducedMotion) return;
 
-      const cubeCount = 28;
-      for (let i = 0; i < cubeCount; i += 1) {
-        const cube = document.createElement('span');
-        cube.className = 'ambient-cube';
+      const layers = [
+        {
+          name: 'cubes',
+          el: document.getElementById('ambient-cubes'),
+          build: buildCubes
+        },
+        {
+          name: 'dominoes',
+          el: document.getElementById('ambient-dominoes'),
+          build: buildDominoes
+        },
+        {
+          name: 'electric',
+          el: document.getElementById('ambient-electric'),
+          build: buildElectric
+        }
+      ].filter((layer) => layer.el);
 
-        const size = 18 + Math.random() * 34;
-        const x0 = Math.random() * 100;
-        const y0 = Math.random() * 100;
-        const x1 = (x0 + (Math.random() * 40 - 20) + 100) % 100;
-        const y1 = (y0 + (Math.random() * 40 - 20) + 100) % 100;
-        const r0 = Math.random() * 60 - 30;
-        const r1 = r0 + (Math.random() * 40 - 20);
-        const dur = 18 + Math.random() * 20;
-        const delay = -Math.random() * dur;
-        const o0 = 0.06 + Math.random() * 0.14;
-        const o1 = Math.min(o0 + 0.12, 0.32);
+      if (!layers.length) return;
 
-        cube.style.setProperty('--size', `${size}px`);
-        cube.style.setProperty('--x0', `${x0}vw`);
-        cube.style.setProperty('--y0', `${y0}vh`);
-        cube.style.setProperty('--x1', `${x1}vw`);
-        cube.style.setProperty('--y1', `${y1}vh`);
-        cube.style.setProperty('--r0', `${r0}deg`);
-        cube.style.setProperty('--r1', `${r1}deg`);
-        cube.style.setProperty('--dur', `${dur}s`);
-        cube.style.setProperty('--delay', `${delay}s`);
-        cube.style.setProperty('--o0', o0.toFixed(2));
-        cube.style.setProperty('--o1', o1.toFixed(2));
-
-        container.appendChild(cube);
+      function clearLayer(layer) {
+        while (layer.el.firstChild) layer.el.removeChild(layer.el.firstChild);
       }
+
+      function buildCubes(layer) {
+        clearLayer(layer);
+        const count = 28;
+        const fragment = document.createDocumentFragment();
+
+        for (let i = 0; i < count; i += 1) {
+          const cube = document.createElement('span');
+          cube.className = 'ambient-cube';
+
+          const size = 18 + Math.random() * 34;
+          const x0 = Math.random() * 100;
+          const y0 = Math.random() * 100;
+          const x1 = (x0 + (Math.random() * 40 - 20) + 100) % 100;
+          const y1 = (y0 + (Math.random() * 40 - 20) + 100) % 100;
+          const r0 = Math.random() * 60 - 30;
+          const r1 = r0 + (Math.random() * 40 - 20);
+          const dur = 18 + Math.random() * 20;
+          const delay = -Math.random() * dur;
+          const o0 = 0.06 + Math.random() * 0.14;
+          const o1 = Math.min(o0 + 0.12, 0.32);
+
+          cube.style.setProperty('--size', `${size}px`);
+          cube.style.setProperty('--x0', `${x0}vw`);
+          cube.style.setProperty('--y0', `${y0}vh`);
+          cube.style.setProperty('--x1', `${x1}vw`);
+          cube.style.setProperty('--y1', `${y1}vh`);
+          cube.style.setProperty('--r0', `${r0}deg`);
+          cube.style.setProperty('--r1', `${r1}deg`);
+          cube.style.setProperty('--dur', `${dur}s`);
+          cube.style.setProperty('--delay', `${delay}s`);
+          cube.style.setProperty('--o0', o0.toFixed(2));
+          cube.style.setProperty('--o1', o1.toFixed(2));
+
+          fragment.appendChild(cube);
+        }
+
+        layer.el.appendChild(fragment);
+      }
+
+      function buildDominoes(layer) {
+        clearLayer(layer);
+        const count = 36;
+        const fragment = document.createDocumentFragment();
+
+        for (let i = 0; i < count; i += 1) {
+          const tile = document.createElement('span');
+          tile.className = 'domino-tile';
+
+          const w = 14 + Math.random() * 28;
+          const h = w * (0.5 + Math.random() * 0.6);
+          const x0 = Math.random() * 100;
+          const y0 = Math.random() * 100;
+          const dx = (Math.random() * 10 - 5);
+          const dy = (Math.random() * 12 - 6);
+          const r0 = Math.random() * 40 - 20;
+          const r1 = r0 + (Math.random() * 30 - 15);
+          const dur = 16 + Math.random() * 18;
+          const delay = -Math.random() * dur;
+          const o0 = 0.05 + Math.random() * 0.12;
+          const o1 = Math.min(o0 + 0.14, 0.3);
+
+          tile.style.setProperty('--w', `${w}px`);
+          tile.style.setProperty('--h', `${h}px`);
+          tile.style.setProperty('--x0', `${x0}vw`);
+          tile.style.setProperty('--y0', `${y0}vh`);
+          tile.style.setProperty('--dx', `${dx}vw`);
+          tile.style.setProperty('--dy', `${dy}vh`);
+          tile.style.setProperty('--r0', `${r0}deg`);
+          tile.style.setProperty('--r1', `${r1}deg`);
+          tile.style.setProperty('--dur', `${dur}s`);
+          tile.style.setProperty('--delay', `${delay}s`);
+          tile.style.setProperty('--o0', o0.toFixed(2));
+          tile.style.setProperty('--o1', o1.toFixed(2));
+
+          fragment.appendChild(tile);
+        }
+
+        layer.el.appendChild(fragment);
+      }
+
+      function buildElectric(layer) {
+        clearLayer(layer);
+        const count = 22;
+        const fragment = document.createDocumentFragment();
+
+        for (let i = 0; i < count; i += 1) {
+          const line = document.createElement('span');
+          line.className = 'electric-line';
+
+          const len = 120 + Math.random() * 220;
+          const x0 = Math.random() * 100;
+          const y0 = Math.random() * 100;
+          const x1 = (x0 + (Math.random() * 30 - 15) + 100) % 100;
+          const y1 = (y0 + (Math.random() * 30 - 15) + 100) % 100;
+          const r0 = Math.random() * 40 - 20;
+          const r1 = r0 + (Math.random() * 30 - 15);
+          const dur = 14 + Math.random() * 16;
+          const delay = -Math.random() * dur;
+          const o0 = 0.05 + Math.random() * 0.14;
+          const o1 = Math.min(o0 + 0.18, 0.36);
+
+          line.style.setProperty('--len', `${len}px`);
+          line.style.setProperty('--x0', `${x0}vw`);
+          line.style.setProperty('--y0', `${y0}vh`);
+          line.style.setProperty('--x1', `${x1}vw`);
+          line.style.setProperty('--y1', `${y1}vh`);
+          line.style.setProperty('--r0', `${r0}deg`);
+          line.style.setProperty('--r1', `${r1}deg`);
+          line.style.setProperty('--dur', `${dur}s`);
+          line.style.setProperty('--delay', `${delay}s`);
+          line.style.setProperty('--o0', o0.toFixed(2));
+          line.style.setProperty('--o1', o1.toFixed(2));
+
+          fragment.appendChild(line);
+        }
+
+        layer.el.appendChild(fragment);
+      }
+
+      layers.forEach((layer) => layer.build(layer));
+
+      let activeIndex = Math.floor(Math.random() * layers.length);
+      layers.forEach((layer, idx) => {
+        layer.el.classList.toggle('is-active', idx === activeIndex);
+      });
+
+      function switchLayer() {
+        if (prefersReducedMotion) return;
+        let nextIndex = Math.floor(Math.random() * (layers.length - 1));
+        if (nextIndex >= activeIndex) nextIndex += 1;
+        activeIndex = nextIndex;
+        layers[activeIndex].build(layers[activeIndex]);
+        layers.forEach((layer, idx) => {
+          layer.el.classList.toggle('is-active', idx === activeIndex);
+        });
+      }
+
+      function scheduleSwitch() {
+        if (prefersReducedMotion) return;
+        const wait = 18000 + Math.random() * 12000;
+        setTimeout(() => {
+          switchLayer();
+          scheduleSwitch();
+        }, wait);
+      }
+
+      scheduleSwitch();
     })();
   </script>
 
