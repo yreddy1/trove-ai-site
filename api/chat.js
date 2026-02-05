@@ -1,3 +1,36 @@
+import OpenAI from 'openai';
+
+const openai = process.env.OPENAI_API_KEY
+  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  : null;
+
+async function localizeMessage(message, userMessage) {
+  if (!openai) return message;
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      temperature: 0.2,
+      messages: [
+        {
+          role: 'system',
+          content: 'Translate the assistant response into the language used by the user. If the user wrote in English, return the response unchanged. Return only the translated text without quotes or extra commentary.'
+        },
+        {
+          role: 'user',
+          content: `User message: ${userMessage}\nAssistant response: ${message}`
+        }
+      ],
+    });
+
+    const translated = completion.choices?.[0]?.message?.content?.trim();
+    return translated || message;
+  } catch (error) {
+    console.error('Localization Error:', error);
+    return message;
+  }
+}
+
 // --- INTENT NAVIGATION LOGIC ---
 function getNavigationIntent(message) {
   const text = message.toLowerCase();
@@ -89,11 +122,17 @@ export default async function handler(req, res) {
 
   const navIntent = getNavigationIntent(message);
   if (navIntent) {
-    return res.status(200).json(navIntent);
+    const localized = await localizeMessage(navIntent.message, message);
+    return res.status(200).json({
+      navigate_to: navIntent.navigate_to,
+      message: localized,
+    });
   }
 
   // Ambiguous intent: ask exactly one clarifying question (no navigation)
+  const fallbackQuestion = "Do you want information about our company, our solutions, or to contact us?";
+  const localizedQuestion = await localizeMessage(fallbackQuestion, message);
   return res.status(200).json({
-    message: "Do you want information about our company, our solutions, or to contact us?"
+    message: localizedQuestion
   });
 }
