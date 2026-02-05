@@ -716,8 +716,15 @@
             // Remove loading bubble
             messagesArea.removeChild(loadingDiv);
             
-            if (data.reply) {
-                addMessage(data.reply, 'ai');
+            if (data && data.navigate_to) {
+                if (data.message) addMessage(data.message, 'ai');
+                handleNavigation(data.navigate_to);
+                return;
+            }
+
+            const reply = data.reply || data.message;
+            if (reply) {
+                addMessage(reply, 'ai');
                 if (data.audio && !isMuted) {
                     playAudio(data.audio);
                 }
@@ -732,7 +739,12 @@
             // Fallback to local logic for offline/demo purposes
             setTimeout(() => {
                 const fallback = generateResponse(text);
-                addMessage(fallback + " (Fallback Response)", 'ai');
+                if (fallback && fallback.navigate_to) {
+                    addMessage(fallback.message || "Taking you to the right page.", 'ai');
+                    handleNavigation(fallback.navigate_to);
+                } else {
+                    addMessage(fallback + " (Fallback Response)", 'ai');
+                }
             }, 500);
         }
     }
@@ -780,15 +792,34 @@
         // to support the direct GPT-4o-Audio response format
     }
 
+    function handleNavigation(route) {
+        const routes = {
+            home: './index.html',
+            about: './about.html',
+            solutions: './solutions.html',
+            contact: './contact.html'
+        };
+
+        if (routes[route]) {
+            window.location.href = routes[route];
+        }
+    }
+
     function generateResponse(input) {
         const lower = input.toLowerCase();
-        if (lower.includes('price') || lower.includes('cost')) return "Pricing depends on the scale of deployment. Would you like me to connect you with our sales team?";
-        if (lower.includes('care') || lower.includes('school') || lower.includes('child')) return "CareIQ™ is designed specifically for childcare and education safety. It uses privacy-first AI to monitor for safety incidents.";
-        if (lower.includes('cyber') || lower.includes('hack')) return "CyberIQ™ moves beyond simple alerts to predictive threat intelligence. It correlates signals across your entire network.";
-        if (lower.includes('contact') || lower.includes('email') || lower.includes('talk')) return "You can reach us at info@trove-ai.com or visit our Contact page.";
-        if (lower.includes('hello') || lower.includes('hi')) return "Hello there! How can I assist you with Trove's solutions today?";
-        if (lower.includes('lexso') || lower.includes('constellis')) return "LEXSO™ is our strategic partnership with Constellis, combining their operational expertise with our DeepSenseIQ platform.";
-        return "I understand. Our team of experts can provide more details on that. Would you like to schedule a consultation?";
+        if (/\b(home|start|main page|overview|lexso|what is trove|what is lexso|landing|welcome)\b/.test(lower)) {
+            return { navigate_to: "home", message: "Navigating to the home page for an overview." };
+        }
+        if (/\b(about|mission|background|company|team|who are you|who is trove|history|founder|leadership|values)\b/.test(lower)) {
+            return { navigate_to: "about", message: "Navigating to the about page for company information." };
+        }
+        if (/\b(solution|product|capabilit|ai|sensor|how (it|this) work|feature|technology|platform|service|offering|tool|deep|visual|cyber|data|careiq|visualiq|deepsenseiq|cyberiq|dataiq)\b/.test(lower)) {
+            return { navigate_to: "solutions", message: "Navigating to the solutions page for product and technology details." };
+        }
+        if (/\b(contact|demo|price|sales|partnership|talk|speak|reach|connect|inquiry|quote|support|help|email|phone|call|meeting|schedule|info@trove-ai.com)\b/.test(lower)) {
+            return { navigate_to: "contact", message: "Navigating to the contact page to connect with our team." };
+        }
+        return "Could you clarify if you want information about our company, our solutions, or to contact us?";
     }
   </script>
 </body>
