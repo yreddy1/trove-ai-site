@@ -285,17 +285,35 @@
   function generateResponse(input) {
     const lower = input.toLowerCase();
 
-    if (/\b(home|start|main page|overview|lexso|what is trove|what is lexso|landing|welcome)\b/.test(lower)) {
-      return { navigate_to: 'home', message: 'Here is a quick overview of Trove and LEXSO. Taking you to the home page now.' };
+    if (/\b(contact|demo|price|sales|partnership|talk|speak|reach|connect|inquiry|quote|support|help|email|phone|call|meeting|schedule|info@trove-ai\.com)\b/.test(lower)) {
+      return { navigate_to: 'contact', message: 'We can connect you with our team for demos, pricing, or partnerships. Taking you to the Contact page.' };
     }
-    if (/\b(about|mission|background|company|team|who are you|who is trove|history|founder|leadership|values)\b/.test(lower)) {
-      return { navigate_to: 'about', message: 'Our mission is to deliver AI-powered solutions for safety, security, and mission-critical decision-making. Taking you to the About page.' };
+    if (/\blexso\b/.test(lower)) {
+      return { navigate_to: 'home', message: 'LEXSO is our strategic partnership with Constellis, combining operational expertise with our AI platform. Taking you to the Home page.' };
+    }
+    if (/\bcare\s?iq\b/.test(lower)) {
+      return { navigate_to: 'solutions', message: 'CareIQ provides continuous, privacy-first monitoring for childcare and education safety. Taking you to the Solutions page.' };
+    }
+    if (/\bvisual\s?iq\b/.test(lower)) {
+      return { navigate_to: 'solutions', message: 'VisualIQ turns live and recorded video into actionable security and operational insight. Taking you to the Solutions page.' };
+    }
+    if (/\bdeep\s?sense\s?iq\b/.test(lower)) {
+      return { navigate_to: 'solutions', message: 'DeepSenseIQ fuses cameras, sensors, and systems into a unified operational picture. Taking you to the Solutions page.' };
+    }
+    if (/\bcyber\s?iq\b/.test(lower)) {
+      return { navigate_to: 'solutions', message: 'CyberIQ correlates signals across networks to surface threats earlier and reduce response time. Taking you to the Solutions page.' };
+    }
+    if (/\bdata\s?iq\b/.test(lower)) {
+      return { navigate_to: 'solutions', message: 'DataIQ delivers secure document intelligence with OCR, semantic search, and structured extraction. Taking you to the Solutions page.' };
     }
     if (/\b(solution|product|capabilit|ai|sensor|how (it|this) work|feature|technology|platform|service|offering|tool|deep|visual|cyber|data|careiq|visualiq|deepsenseiq|cyberiq|dataiq)\b/.test(lower)) {
       return { navigate_to: 'solutions', message: 'We offer platforms like CareIQ, DeepSenseIQ, CyberIQ, and DataIQ for mission-critical operations. Taking you to the Solutions page.' };
     }
-    if (/\b(contact|demo|price|sales|partnership|talk|speak|reach|connect|inquiry|quote|support|help|email|phone|call|meeting|schedule|info@trove-ai\.com)\b/.test(lower)) {
-      return { navigate_to: 'contact', message: 'We can connect you with our team for demos, pricing, or partnerships. Taking you to the Contact page.' };
+    if (/\b(about|mission|background|company|team|who are you|who is trove|history|founder|leadership|values)\b/.test(lower)) {
+      return { navigate_to: 'about', message: 'Our mission is to deliver AI-powered solutions for safety, security, and mission-critical decision-making. Taking you to the About page.' };
+    }
+    if (/\b(home|start|main page|overview|what is trove|what is lexso|landing|welcome)\b/.test(lower)) {
+      return { navigate_to: 'home', message: 'Here is a quick overview of Trove and LEXSO. Taking you to the Home page.' };
     }
 
     return 'Do you want information about our company, our solutions, or to contact us?';
