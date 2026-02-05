@@ -35,9 +35,9 @@
       position: absolute;
       width: var(--size);
       height: var(--size);
-      border: 1px solid rgba(161, 195, 78, 0.12);
-      background: linear-gradient(135deg, rgba(161, 195, 78, 0.08), rgba(59, 130, 246, 0.04));
-      box-shadow: 0 0 18px rgba(161, 195, 78, 0.12);
+      border: 1px solid rgba(161, 195, 78, 0.18);
+      background: linear-gradient(135deg, rgba(161, 195, 78, 0.12), rgba(59, 130, 246, 0.06));
+      box-shadow: 0 0 18px rgba(161, 195, 78, 0.18);
       transform: translate3d(var(--x0), var(--y0), 0) rotate(var(--r0));
       opacity: var(--o0);
       animation: cube-drift var(--dur) ease-in-out infinite;
@@ -47,7 +47,7 @@
       content: "";
       position: absolute;
       inset: 0;
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       transform: translate3d(4px, 4px, 0);
       opacity: 0.35;
     }
@@ -66,9 +66,9 @@
       position: absolute;
       width: var(--w);
       height: var(--h);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(161, 195, 78, 0.08));
-      box-shadow: 0 0 16px rgba(161, 195, 78, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(161, 195, 78, 0.12));
+      box-shadow: 0 0 16px rgba(161, 195, 78, 0.14);
       transform: translate3d(var(--x0), var(--y0), 0) rotate(var(--r0));
       opacity: var(--o0);
       animation: domino-wave var(--dur) ease-in-out infinite;
@@ -92,10 +92,10 @@
       position: absolute;
       width: var(--len);
       height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.6), rgba(161, 195, 78, 0.45), transparent);
+      background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.8), rgba(161, 195, 78, 0.65), transparent);
       opacity: var(--o0);
       transform: translate3d(var(--x0), var(--y0), 0) rotate(var(--r0));
-      filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.35));
+      filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.55));
       animation: electric-drift var(--dur) ease-in-out infinite;
       animation-delay: var(--delay);
     }
@@ -103,8 +103,8 @@
       content: "";
       position: absolute;
       inset: -1px 0;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
-      opacity: 0.3;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+      opacity: 0.4;
     }
     @keyframes electric-drift {
       0% {
@@ -721,8 +721,8 @@
           const r1 = r0 + (Math.random() * 40 - 20);
           const dur = 18 + Math.random() * 20;
           const delay = -Math.random() * dur;
-          const o0 = 0.06 + Math.random() * 0.14;
-          const o1 = Math.min(o0 + 0.12, 0.32);
+          const o0 = 0.09 + Math.random() * 0.21;
+          const o1 = Math.min(o0 + 0.18, 0.45);
 
           cube.style.setProperty('--size', `${size}px`);
           cube.style.setProperty('--x0', `${x0}vw`);
@@ -761,8 +761,8 @@
           const r1 = r0 + (Math.random() * 30 - 15);
           const dur = 16 + Math.random() * 18;
           const delay = -Math.random() * dur;
-          const o0 = 0.05 + Math.random() * 0.12;
-          const o1 = Math.min(o0 + 0.14, 0.3);
+          const o0 = 0.075 + Math.random() * 0.18;
+          const o1 = Math.min(o0 + 0.21, 0.45);
 
           tile.style.setProperty('--w', `${w}px`);
           tile.style.setProperty('--h', `${h}px`);
@@ -801,8 +801,8 @@
           const r1 = r0 + (Math.random() * 30 - 15);
           const dur = 14 + Math.random() * 16;
           const delay = -Math.random() * dur;
-          const o0 = 0.05 + Math.random() * 0.14;
-          const o1 = Math.min(o0 + 0.18, 0.36);
+          const o0 = 0.075 + Math.random() * 0.21;
+          const o1 = Math.min(o0 + 0.27, 0.5);
 
           line.style.setProperty('--len', `${len}px`);
           line.style.setProperty('--x0', `${x0}vw`);
