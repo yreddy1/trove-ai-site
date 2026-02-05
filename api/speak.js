@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     const mp3 = await openai.audio.speech.create({
       model: "gpt-4o-mini-tts",
       voice: "marin",
-      instructions: "Speak in clear, professional English with a slight German accent. Keep the tone warm, confident, and concise.",
+      instructions: "Speak in clear, professional English with a noticeably German accent. Keep the tone warm, confident, and concise.",
       input: text,
     });
 
