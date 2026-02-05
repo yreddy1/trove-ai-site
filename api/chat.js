@@ -1,3 +1,37 @@
+// --- INTENT NAVIGATION LOGIC ---
+function getNavigationIntent(message) {
+  const text = message.toLowerCase();
+  // Home intent
+  if (/\b(home|start|main page|overview|lexso|what is trove|what is lexso|landing|welcome)\b/.test(text)) {
+    return {
+      navigate_to: "home",
+      message: "Navigating to the home page for an overview."
+    };
+  }
+  // About intent
+  if (/\b(about|mission|background|company|team|who are you|who is trove|history|founder|leadership|values)\b/.test(text)) {
+    return {
+      navigate_to: "about",
+      message: "Navigating to the about page for company information."
+    };
+  }
+  // Solutions intent
+  if (/\b(solution|product|capabilit|ai|sensor|how (it|this) work|feature|technology|platform|service|offering|tool|deep|visual|cyber|data|careiq|visualiq|deepsenseiq|cyberiq|dataiq)\b/.test(text)) {
+    return {
+      navigate_to: "solutions",
+      message: "Navigating to the solutions page for product and technology details."
+    };
+  }
+  // Contact intent
+  if (/\b(contact|demo|price|sales|partnership|talk|speak|reach|connect|inquiry|quote|support|help|email|phone|call|meeting|schedule|info@trove-ai.com)\b/.test(text)) {
+    return {
+      navigate_to: "contact",
+      message: "Navigating to the contact page to connect with our team."
+    };
+  }
+  // Ambiguous: ask for clarification
+  return null;
+}
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
@@ -39,27 +73,15 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Message is required' });
   }
 
-  try {
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-audio-preview',
-      modalities: ["text", "audio"],
-      audio: { voice: "alloy", format: "mp3" },
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: message },
-      ],
-      max_tokens: 2000,
-    });
-
-    const reply = completion.choices[0].message.audio.transcript;
-    const audioData = completion.choices[0].message.audio.data;
-
-    res.status(200).json({ reply, audio: audioData });
-  } catch (error) {
-    console.error('OpenAI Error:', error);
-    // Fallback response if API fails (e.g., missing key)
-    res.status(500).json({ 
-      reply: "I'm having trouble connecting to my knowledge base right now. Please try again later or contact us directly." 
-    });
+  // --- INTENT NAVIGATION HANDLING ---
+  const navIntent = getNavigationIntent(message);
+  if (navIntent) {
+    // Rule: Only return valid JSON, no extra text
+    return res.status(200).json(navIntent);
   }
+
+  // If ambiguous, ask one clarifying question and do NOT navigate yet
+  return res.status(200).json({
+    message: "Could you clarify if you want information about our company, our solutions, or to contact us?"
+  });
 }
