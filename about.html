@@ -255,8 +255,10 @@
       let troveAspect = 1;
 
       const shapeKinds = ['circle', 'hex', 'wave', 'grid', 'triangle', 'freq', 'trove', 'freq', 'harmonic'];
-      let freqDrift = Math.random() * 10;
-      let baseFrequency = 2.4 + Math.random() * 4.8;
+      const HIGH_FREQ_MIN = 3600;
+      const HIGH_FREQ_MAX = 5600;
+      let freqDrift = Math.random() * 1000;
+      let baseFrequency = HIGH_FREQ_MIN + Math.random() * (HIGH_FREQ_MAX - HIGH_FREQ_MIN);
 
       function resize() {
         const rect = canvas.getBoundingClientRect();
@@ -291,8 +293,11 @@
       }
 
       function nextFrequency() {
-        freqDrift += 0.3 + Math.random() * 0.7;
-        baseFrequency = 1.8 + (freqDrift % 7.6) + Math.random() * 0.3;
+        freqDrift += 140 + Math.random() * 280;
+        baseFrequency += 120 + Math.random() * 260;
+        if (baseFrequency > HIGH_FREQ_MAX) {
+          baseFrequency = HIGH_FREQ_MIN + (baseFrequency - HIGH_FREQ_MAX);
+        }
         return baseFrequency;
       }
 
@@ -351,7 +356,8 @@
           const total = count;
           for (let i = 0; i < total; i += 1) {
             const t = (i / total) * Math.PI * 2;
-            const radial = Math.sin(shape.f * t + shape.phase) * size * 0.65 * shape.scale;
+            const f = shape.f * 0.001;
+            const radial = Math.sin(f * t + shape.phase) * size * 0.65 * shape.scale;
             const x = Math.cos(t) * radial;
             const y = Math.sin(t) * radial * 0.85;
             points.push({ x: cx + x, y: cy + y });
@@ -363,10 +369,11 @@
           const total = count;
           for (let i = 0; i < total; i += 1) {
             const t = (i / total) * Math.PI * 2;
+            const f = shape.f * 0.001;
             const wave =
-              Math.sin(shape.f * t + shape.phase[0]) +
-              0.45 * Math.sin(shape.f * t + shape.phase[1]) +
-              0.25 * Math.sin(shape.f * t + shape.phase[2]);
+              Math.sin(f * t + shape.phase[0]) +
+              0.45 * Math.sin(f * t + shape.phase[1]) +
+              0.25 * Math.sin(f * t + shape.phase[2]);
             const radial = wave * size * 0.45 * shape.scale;
             const x = Math.cos(t) * radial;
             const y = Math.sin(t) * radial * 0.78;
@@ -480,12 +487,12 @@
         if (shape && typeof shape === 'object' && (shape.type === 'freq' || shape.type === 'harmonic')) {
           lastFrequencyLabel = shape.f;
           freqLabel.style.opacity = '0.7';
-          freqValue.textContent = `${shape.f.toFixed(1)} Hz`;
+          freqValue.textContent = `${Math.round(shape.f)} Hz`;
           return;
         }
         if (typeof lastFrequencyLabel === 'number') {
           freqLabel.style.opacity = '0.45';
-          freqValue.textContent = `${lastFrequencyLabel.toFixed(1)} Hz`;
+          freqValue.textContent = `${Math.round(lastFrequencyLabel)} Hz`;
         } else {
           freqLabel.style.opacity = '0.45';
           freqValue.textContent = '--';
