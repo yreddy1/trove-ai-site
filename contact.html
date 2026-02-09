@@ -434,5 +434,84 @@
       });
     })();
   </script>
+
+  <audio id="ambient-audio" src="./ai_ambient_shuffle_110bpm.wav" loop preload="none"></audio>
+  <button
+    id="ambient-audio-toggle"
+    class="fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-trove-dark/80 text-lg text-slate-200 shadow-lg backdrop-blur transition-colors hover:text-white hover:border-white/20"
+    aria-label="Toggle ambient audio"
+    aria-pressed="false"
+    type="button"
+  >🔇</button>
+  <script>
+    (() => {
+      const audio = document.getElementById('ambient-audio');
+      const button = document.getElementById('ambient-audio-toggle');
+      if (!audio || !button) return;
+
+      audio.volume = 0.15;
+      let userEnabled = false;
+      let pausedByVisibility = false;
+      let pausedByAssistant = false;
+
+      const updateIcon = () => {
+        button.textContent = userEnabled ? '🔊' : '🔇';
+        button.setAttribute('aria-pressed', userEnabled ? 'true' : 'false');
+      };
+
+      const playAudio = async () => {
+        try {
+          await audio.play();
+        } catch (error) {
+          userEnabled = false;
+          updateIcon();
+        }
+      };
+
+      const pauseAudio = () => {
+        audio.pause();
+      };
+
+      button.addEventListener('click', () => {
+        userEnabled = !userEnabled;
+        if (userEnabled) {
+          pausedByVisibility = false;
+          pausedByAssistant = false;
+          playAudio();
+        } else {
+          pauseAudio();
+        }
+        updateIcon();
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          if (!audio.paused) {
+            pausedByVisibility = true;
+            pauseAudio();
+          }
+          return;
+        }
+        if (userEnabled && pausedByVisibility && !pausedByAssistant) {
+          pausedByVisibility = false;
+          playAudio();
+        }
+      });
+
+      window.pauseAmbientAudio = () => {
+        if (!userEnabled) return;
+        pausedByAssistant = true;
+        pauseAudio();
+      };
+
+      window.resumeAmbientAudio = () => {
+        if (!userEnabled) return;
+        pausedByAssistant = false;
+        if (!document.hidden) playAudio();
+      };
+
+      updateIcon();
+    })();
+  </script>
 </body>
 </html>

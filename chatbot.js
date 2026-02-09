@@ -94,6 +94,10 @@
   async function speak(text) {
     if (isMuted || !text) return;
 
+    if (typeof window.pauseAmbientAudio === 'function') {
+      window.pauseAmbientAudio();
+    }
+
     if (muteBtn) muteBtn.classList.add('animate-pulse');
 
     try {
@@ -112,6 +116,17 @@
       audio.onended = () => {
         if (muteBtn) muteBtn.classList.remove('animate-pulse');
         URL.revokeObjectURL(audioUrl);
+        if (typeof window.resumeAmbientAudio === 'function') {
+          window.resumeAmbientAudio();
+        }
+      };
+
+      audio.onerror = () => {
+        if (muteBtn) muteBtn.classList.remove('animate-pulse');
+        URL.revokeObjectURL(audioUrl);
+        if (typeof window.resumeAmbientAudio === 'function') {
+          window.resumeAmbientAudio();
+        }
       };
 
       await audio.play();
@@ -121,7 +136,14 @@
 
       if ('speechSynthesis' in window) {
         const utterance = new SpeechSynthesisUtterance(text);
+        utterance.onend = () => {
+          if (typeof window.resumeAmbientAudio === 'function') {
+            window.resumeAmbientAudio();
+          }
+        };
         window.speechSynthesis.speak(utterance);
+      } else if (typeof window.resumeAmbientAudio === 'function') {
+        window.resumeAmbientAudio();
       }
     }
   }
@@ -357,14 +379,33 @@
     if (isMuted || !base64Audio) return;
     if (muteBtn) muteBtn.classList.add('animate-pulse');
 
+    if (typeof window.pauseAmbientAudio === 'function') {
+      window.pauseAmbientAudio();
+    }
+
     const audioUrl = 'data:audio/mp3;base64,' + base64Audio;
     const audio = new Audio(audioUrl);
 
     audio.onended = () => {
       if (muteBtn) muteBtn.classList.remove('animate-pulse');
+      if (typeof window.resumeAmbientAudio === 'function') {
+        window.resumeAmbientAudio();
+      }
     };
 
-    audio.play().catch(e => console.error('Audio play failed', e));
+    audio.onerror = () => {
+      if (muteBtn) muteBtn.classList.remove('animate-pulse');
+      if (typeof window.resumeAmbientAudio === 'function') {
+        window.resumeAmbientAudio();
+      }
+    };
+
+    audio.play().catch(e => {
+      console.error('Audio play failed', e);
+      if (typeof window.resumeAmbientAudio === 'function') {
+        window.resumeAmbientAudio();
+      }
+    });
   }
 
   function addMessage(text, sender) {
