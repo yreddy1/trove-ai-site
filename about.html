@@ -57,6 +57,14 @@
   <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden">
     <canvas id="data-flow" class="data-flow-canvas"></canvas>
   </div>
+  <div
+    id="frequency-label"
+    class="pointer-events-none fixed left-6 top-1/2 -translate-y-1/2 text-[10px] uppercase tracking-[0.2em] text-slate-500 opacity-70 font-mono"
+    aria-hidden="true"
+  >
+    <div>Signal Freq</div>
+    <div data-freq-value class="mt-1 text-[10px] text-slate-400 tracking-normal">--</div>
+  </div>
   <!-- HEADER -->
   <header class="sticky top-0 z-40 border-b border-white/10 bg-trove-dark">
     <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
@@ -226,21 +234,29 @@
       const canvas = document.getElementById('data-flow');
       if (!canvas) return;
 
+      const freqLabel = document.getElementById('frequency-label');
+      const freqValue = freqLabel ? freqLabel.querySelector('[data-freq-value]') : null;
+
       const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (prefersReducedMotion) return;
+      if (prefersReducedMotion) {
+        if (freqLabel) freqLabel.style.display = 'none';
+        return;
+      }
 
       const ctx = canvas.getContext('2d');
       let width = 0;
       let height = 0;
       let dpr = 1;
       let particles = [];
-      let shapeIndex = 0;
+      let lastShapeKind = null;
       let nextShapeAt = 0;
       let lastTime = 0;
       let trovePoints = null;
       let troveAspect = 1;
 
-      const shapeKinds = ['circle', 'hex', 'wave', 'grid', 'triangle', 'freq', 'harmonic', 'freq', 'trove'];
+      const shapeKinds = ['circle', 'hex', 'wave', 'grid', 'triangle', 'freq', 'trove', 'freq', 'harmonic'];
+      let freqDrift = Math.random() * 10;
+      let baseFrequency = 2.4 + Math.random() * 4.8;
 
       function resize() {
         const rect = canvas.getBoundingClientRect();
@@ -274,24 +290,32 @@
         return array;
       }
 
+      function nextFrequency() {
+        freqDrift += 0.3 + Math.random() * 0.7;
+        baseFrequency = 1.8 + (freqDrift % 7.6) + Math.random() * 0.3;
+        return baseFrequency;
+      }
+
       function randomFreqShape() {
-        const a = 2 + Math.floor(Math.random() * 6);
-        const b = 2 + Math.floor(Math.random() * 6);
+        const f = nextFrequency();
         return {
           type: 'freq',
-          a,
-          b,
+          f,
           phase: Math.random() * Math.PI * 2,
           scale: 0.7 + Math.random() * 0.6
         };
       }
 
       function randomHarmonicShape() {
-        const freq = [2 + Math.random() * 4, 3 + Math.random() * 5, 4 + Math.random() * 6];
+        const f = nextFrequency();
         return {
           type: 'harmonic',
-          freq,
-          phase: [Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2],
+          f,
+          phase: [
+            Math.random() * Math.PI * 2,
+            Math.random() * Math.PI * 2,
+            Math.random() * Math.PI * 2
+          ],
           scale: 0.65 + Math.random() * 0.7
         };
       }
@@ -327,8 +351,9 @@
           const total = count;
           for (let i = 0; i < total; i += 1) {
             const t = (i / total) * Math.PI * 2;
-            const x = Math.sin(shape.a * t + shape.phase) * size * 0.85 * shape.scale;
-            const y = Math.sin(shape.b * t) * size * 0.55 * shape.scale;
+            const radial = Math.sin(shape.f * t + shape.phase) * size * 0.65 * shape.scale;
+            const x = Math.cos(t) * radial;
+            const y = Math.sin(t) * radial * 0.85;
             points.push({ x: cx + x, y: cy + y });
           }
           return points;
@@ -338,16 +363,13 @@
           const total = count;
           for (let i = 0; i < total; i += 1) {
             const t = (i / total) * Math.PI * 2;
-            const x = (
-              Math.sin(shape.freq[0] * t + shape.phase[0]) +
-              0.6 * Math.sin(shape.freq[1] * t + shape.phase[1]) +
-              0.35 * Math.sin(shape.freq[2] * t + shape.phase[2])
-            ) * size * 0.45 * shape.scale;
-            const y = (
-              Math.cos(shape.freq[1] * t + shape.phase[1]) +
-              0.5 * Math.cos(shape.freq[2] * t + shape.phase[2]) +
-              0.3 * Math.cos(shape.freq[0] * t + shape.phase[0])
-            ) * size * 0.38 * shape.scale;
+            const wave =
+              Math.sin(shape.f * t + shape.phase[0]) +
+              0.45 * Math.sin(shape.f * t + shape.phase[1]) +
+              0.25 * Math.sin(shape.f * t + shape.phase[2]);
+            const radial = wave * size * 0.45 * shape.scale;
+            const x = Math.cos(t) * radial;
+            const y = Math.sin(t) * radial * 0.78;
             points.push({ x: cx + x, y: cy + y });
           }
           return points;
@@ -439,7 +461,39 @@
         return points;
       }
 
-      let currentShape = getShapeDescriptor(shapeKinds[shapeIndex]);
+      function pickNextShapeKind() {
+        if (!shapeKinds.length) return 'circle';
+        let next = shapeKinds[Math.floor(Math.random() * shapeKinds.length)];
+        let attempts = 0;
+        while (next === lastShapeKind && attempts < 6) {
+          next = shapeKinds[Math.floor(Math.random() * shapeKinds.length)];
+          attempts += 1;
+        }
+        lastShapeKind = next;
+        return next;
+      }
+
+      let lastFrequencyLabel = baseFrequency;
+
+      function updateFrequencyLabel(shape) {
+        if (!freqLabel || !freqValue) return;
+        if (shape && typeof shape === 'object' && (shape.type === 'freq' || shape.type === 'harmonic')) {
+          lastFrequencyLabel = shape.f;
+          freqLabel.style.opacity = '0.7';
+          freqValue.textContent = `${shape.f.toFixed(1)} Hz`;
+          return;
+        }
+        if (typeof lastFrequencyLabel === 'number') {
+          freqLabel.style.opacity = '0.45';
+          freqValue.textContent = `${lastFrequencyLabel.toFixed(1)} Hz`;
+        } else {
+          freqLabel.style.opacity = '0.45';
+          freqValue.textContent = '--';
+        }
+      }
+
+      let currentShape = getShapeDescriptor(pickNextShapeKind());
+      updateFrequencyLabel(currentShape);
 
       function assignTargets() {
         const points = generatePoints(currentShape, particles.length);
@@ -518,8 +572,8 @@
         }
 
         if (time > nextShapeAt) {
-          shapeIndex = (shapeIndex + 1) % shapeKinds.length;
-          currentShape = getShapeDescriptor(shapeKinds[shapeIndex]);
+          currentShape = getShapeDescriptor(pickNextShapeKind());
+          updateFrequencyLabel(currentShape);
           assignTargets();
         }
 
