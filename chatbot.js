@@ -154,13 +154,114 @@
     }
   }
 
-  async function sendMessage() {
-    if (!inputField || !messagesArea) return;
-    const text = inputField.value.trim();
+  function toTimestamp(value) {
+    if (!value) return null;
+    if (typeof value === 'number') return value;
+    if (value instanceof Date) return value.getTime();
+    const parsed = Date.parse(value);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+
+  function formatRelativeTime(value) {
+    const ts = toTimestamp(value);
+    if (!ts) return 'just now';
+    const delta = Date.now() - ts;
+    if (delta < 15000) return 'just now';
+    if (delta < 60000) return `${Math.max(1, Math.round(delta / 1000))}s ago`;
+    if (delta < 3600000) return `${Math.round(delta / 60000)}m ago`;
+    return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function describeAgent(agent) {
+    if (!agent) return '';
+    const confidence = Math.round((agent.confidence || 0) * 100);
+    const updated = formatRelativeTime(agent.lastUpdated);
+    const status = agent.status || 'Standby';
+    const task = agent.currentTask || 'Standing by for signals.';
+    return `${agent.name} is ${status.toLowerCase()} — ${task} (confidence ${confidence}%, updated ${updated}).`;
+  }
+
+  function findAgentFromText(mesh, text) {
+    if (!mesh || !mesh.agents || !text) return null;
+    const lower = text.toLowerCase();
+    const direct = mesh.agents.find((agent) => lower.includes(agent.name.toLowerCase()));
+    if (direct) return direct;
+
+    const aliasMap = {
+      visual: ['visual', 'video', 'camera', 'anomaly'],
+      audio: ['audio', 'sound', 'acoustic', 'mic', 'noise'],
+      context: ['context', 'correlation', 'fusion', 'signal']
+    };
+
+    return mesh.agents.find((agent) => {
+      const aliases = aliasMap[agent.id] || [];
+      return aliases.some((alias) => lower.includes(alias));
+    });
+  }
+
+  function tryLocalMeshResponse(text) {
+    const lower = (text || '').toLowerCase();
+    const wantsMesh =
+      /\b(show|trigger|run|display|surface|reveal|start)\b.*\b(mesh|intelligence mesh|volumetric mesh|signal field)\b/.test(lower) ||
+      /\bintelligence mesh\b/.test(lower);
+
+    if (wantsMesh && window.intelligenceMesh && typeof window.intelligenceMesh.trigger === 'function') {
+      window.intelligenceMesh.trigger();
+      return 'Showing the Volumetric Intelligence Mesh now.';
+    }
+
+    const mesh = window.agentMesh;
+    if (!mesh) return null;
+
+    const agent = typeof mesh.findAgent === 'function' ? mesh.findAgent(lower) : findAgentFromText(mesh, lower);
+    const wantsStatus = /\b(status|state|active|standby|doing|task|activity|explain)\b/.test(lower);
+    const wantsAll = /\b(agent mesh|agents|mesh status|all agents)\b/.test(lower);
+    const wantsTime = /\b(time to action|response time|latency|decision cycle|why.*fast|how.*fast|seconds|minutes)\b/.test(lower);
+    const wantsActivate = /\b(activate|resume|start|enable|wake)\b/.test(lower);
+    const wantsPause = /\b(pause|standby|halt|stop|deactivate|disable)\b/.test(lower);
+
+    if (agent && (wantsActivate || wantsPause)) {
+      const status = wantsActivate ? 'Active' : 'Standby';
+      const updated = typeof mesh.setStatus === 'function'
+        ? mesh.setStatus(agent.id, status, 'Operator request')
+        : agent;
+      return `${describeAgent(updated || agent)}`;
+    }
+
+    if (agent && (wantsStatus || !wantsAll)) {
+      const detailed = typeof mesh.explainAgent === 'function' ? mesh.explainAgent(agent.id) : describeAgent(agent);
+      return detailed;
+    }
+
+    if (wantsAll) {
+      if (typeof mesh.explainAll === 'function') return mesh.explainAll();
+      return mesh.agents.map(describeAgent).join(' ');
+    }
+
+    if (wantsTime) {
+      if (typeof mesh.explainTimeToAction === 'function') return mesh.explainTimeToAction();
+      return 'Trove AI compresses the decision cycle by running visual, audio, and context agents in parallel and correlating signals immediately.';
+    }
+
+    return null;
+  }
+
+  async function sendMessage(customText) {
+    if (!messagesArea) return;
+    const usingInput = customText === undefined || customText === null;
+    const rawText = usingInput ? (inputField ? inputField.value : '') : customText;
+    const text = (rawText || '').trim();
     if (!text) return;
 
     addMessage(text, 'user');
-    inputField.value = '';
+    if (usingInput && inputField) inputField.value = '';
+
+    const localReply = tryLocalMeshResponse(text);
+    if (localReply) {
+      addMessage(localReply, 'ai');
+      speak(localReply);
+      return;
+    }
 
     const loadingDiv = document.createElement('div');
     loadingDiv.id = 'ai-loading';
@@ -229,6 +330,28 @@
     }
   }
   window.sendMessage = sendMessage;
+
+  function ensureAssistantOpen() {
+    if (!chatWindow) return;
+    if (chatWindow.classList.contains('hidden')) {
+      toggleAssistant();
+    }
+  }
+
+  window.troveAssistant = {
+    open: ensureAssistantOpen,
+    ask: (text) => {
+      if (!text) return;
+      ensureAssistantOpen();
+      sendMessage(text);
+    },
+    reply: (text) => {
+      if (!text) return;
+      ensureAssistantOpen();
+      addMessage(text, 'ai');
+      speak(text);
+    }
+  };
 
   function playAudio(base64Audio) {
     if (isMuted || !base64Audio) return;

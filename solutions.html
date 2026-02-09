@@ -42,6 +42,23 @@
     @media (prefers-reduced-motion: reduce) {
       .aco-canvas { display: none; }
     }
+    .page-enter,
+    .page-exit {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #page-content {
+        transition: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+      }
+      .page-enter,
+      .page-exit {
+        opacity: 1 !important;
+        transform: none !important;
+      }
+    }
   </style>
 </head>
 <body class="min-h-screen bg-trove-dark font-sans text-slate-300 antialiased">
@@ -64,7 +81,7 @@
     </div>
   </header>
 
-  <main class="relative z-10">
+  <main id="page-content" class="relative z-10 transition-opacity transition-transform duration-200 ease-out">
     <!-- HERO -->
     <section class="mx-auto max-w-6xl px-6 pb-16 pt-20">
       <div class="space-y-6">
@@ -98,7 +115,13 @@
           </div>
         </div>
 
-        <div class="rounded-2xl border border-white/10 bg-white/5 p-8 shadow-sm">
+        <div class="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-8 shadow-sm group hover:border-trove-lime/30 transition-colors">
+          <div class="absolute inset-0 z-0 opacity-10 group-hover:opacity-20 transition-opacity duration-500">
+            <img src="./VisIQ-MockUp-Horizontal-TM-White.png" alt="VisualIQ Background" class="h-full w-full object-cover object-center" />
+          </div>
+          <div class="absolute inset-0 z-0 bg-gradient-to-r from-trove-dark via-trove-dark/95 to-transparent"></div>
+
+          <div class="relative z-10">
           <h2 class="text-2xl font-semibold text-white">VisualIQ™</h2>
           <p class="mt-2 text-sm font-semibold text-slate-300">Video intelligence that turns live and recorded footage into actionable insight.</p>
           <p class="mt-4 text-sm text-slate-400">
@@ -107,6 +130,7 @@
           <p class="mt-3 text-sm text-slate-400">
             The platform is designed for deployment at scale, with governance controls that align to enterprise and government standards.
           </p>
+          </div>
         </div>
 
         <div class="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-8 shadow-sm group hover:border-trove-lime/30 transition-colors">
@@ -127,7 +151,13 @@
           </div>
         </div>
 
-        <div class="rounded-2xl border border-white/10 bg-white/5 p-8 shadow-sm">
+        <div class="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-8 shadow-sm group hover:border-trove-lime/30 transition-colors">
+          <div class="absolute inset-0 z-0 opacity-10 group-hover:opacity-20 transition-opacity duration-500">
+            <img src="./DataIQ-Horizontal-TM-White.png" alt="DataIQ Background" class="h-full w-full object-cover object-center" />
+          </div>
+          <div class="absolute inset-0 z-0 bg-gradient-to-r from-trove-dark via-trove-dark/95 to-transparent"></div>
+
+          <div class="relative z-10">
           <h2 class="text-2xl font-semibold text-white">DataIQ™</h2>
           <p class="mt-2 text-sm font-semibold text-slate-300">Secure document intelligence for complex data environments.</p>
           <p class="mt-4 text-sm text-slate-400">
@@ -136,6 +166,7 @@
           <p class="mt-3 text-sm text-slate-400">
             Built for controlled environments, DataIQ™ maintains strict data custody, access control, and audit trails.
           </p>
+          </div>
         </div>
 
         <div class="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-8 shadow-sm group hover:border-trove-lime/30 transition-colors">
@@ -511,5 +542,48 @@
   </script>
 
   <script src="./chatbot.js"></script>
+  <script>
+    (() => {
+      const page = document.getElementById('page-content');
+      if (!page) return;
+
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      if (prefersReducedMotion.matches) {
+        page.classList.remove('page-enter', 'page-exit');
+        return;
+      }
+
+      page.classList.add('page-enter');
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          page.classList.remove('page-enter');
+        });
+      });
+
+      let isExiting = false;
+      document.addEventListener('click', (event) => {
+        const link = event.target.closest('a');
+        if (!link || isExiting) return;
+        if (event.defaultPrevented) return;
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        if (link.target && link.target !== '_self') return;
+
+        const href = link.getAttribute('href');
+        if (!href || href.startsWith('#')) return;
+        if (href.startsWith('mailto:') || href.startsWith('tel:')) return;
+        if (link.hasAttribute('download')) return;
+
+        const url = new URL(href, window.location.href);
+        if (url.origin !== window.location.origin) return;
+
+        event.preventDefault();
+        isExiting = true;
+        page.classList.add('page-exit');
+        window.setTimeout(() => {
+          window.location.href = url.toString();
+        }, 200);
+      });
+    })();
+  </script>
 </body>
 </html>

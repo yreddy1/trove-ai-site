@@ -147,17 +147,120 @@
       animation: pulse-expand 3.6s ease-out forwards;
       mix-blend-mode: screen;
     }
+    .ambient-glyph {
+      position: absolute;
+      font-family: "Cormorant Garamond", "Times New Roman", Georgia, serif;
+      font-size: var(--size);
+      color: var(--color);
+      opacity: var(--o);
+      transform: translate3d(var(--x), var(--y), 0) rotate(var(--r));
+      filter: blur(0.6px);
+      mix-blend-mode: screen;
+      user-select: none;
+      white-space: nowrap;
+    }
     @keyframes pulse-expand {
       0% { opacity: 0; transform: translate3d(var(--x), var(--y), 0) scale(0.2); }
       18% { opacity: 0.6; }
       100% { opacity: 0; transform: translate3d(var(--x), var(--y), 0) scale(1); }
+    }
+
+    /* Decision Cycle Conveyor */
+    .decision-flow {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .flow-dot {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(161, 195, 78, 0.95);
+      box-shadow: 0 0 14px rgba(161, 195, 78, 0.6);
+      opacity: 0;
+      animation: flow-route var(--dur) linear infinite;
+      animation-delay: var(--delay);
+    }
+    .flow-dot.blue {
+      background: rgba(96, 165, 250, 0.9);
+      box-shadow: 0 0 14px rgba(96, 165, 250, 0.55);
+    }
+    .flow-dot.purple {
+      background: rgba(192, 132, 252, 0.9);
+      box-shadow: 0 0 14px rgba(192, 132, 252, 0.55);
+    }
+    @keyframes flow-route {
+      0% { transform: translate(0, 0) scale(0.4); opacity: 0; }
+      12% { opacity: 1; }
+      60% { transform: translate(var(--x1), var(--y1)) scale(1); opacity: 1; }
+      100% { transform: translate(var(--x2), var(--y2)) scale(0.2); opacity: 0; }
+    }
+    .decision-bar {
+      position: relative;
+      overflow: hidden;
+    }
+    .decision-bar::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(161, 195, 78, 0.35), transparent);
+      transform: translateX(-120%);
+      animation: bar-scan 3.8s ease-in-out infinite;
+    }
+    .decision-bar.traditional::after {
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
+      animation-duration: 6s;
+    }
+    @keyframes bar-scan {
+      0% { transform: translateX(-120%); }
+      60% { transform: translateX(120%); }
+      100% { transform: translateX(120%); }
+    }
+    .impact-pulse {
+      position: relative;
+    }
+    .impact-pulse::after {
+      content: "";
+      position: absolute;
+      inset: -6px;
+      border-radius: 0.75rem;
+      border: 1px solid rgba(161, 195, 78, 0.35);
+      opacity: 0;
+      animation: impact-ring 6s ease-in-out infinite;
+    }
+    @keyframes impact-ring {
+      0%, 70% { opacity: 0; transform: scale(0.96); }
+      82% { opacity: 0.6; }
+      100% { opacity: 0; transform: scale(1.06); }
     }
     @media (prefers-reduced-motion: reduce) {
       .ambient-cube,
       .domino-tile,
       .electric-line,
       .ambient-scan,
-      .ambient-pulse { animation: none; }
+      .ambient-pulse,
+      .flow-dot,
+      .decision-bar::after,
+      .impact-pulse::after { animation: none; }
+    }
+    .page-enter,
+    .page-exit {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #page-content {
+        transition: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+      }
+      .page-enter,
+      .page-exit {
+        opacity: 1 !important;
+        transform: none !important;
+      }
     }
   </style>
 </head>
@@ -189,7 +292,7 @@
     </div>
   </header>
 
-  <main class="relative z-10">
+  <main id="page-content" class="relative z-10 transition-opacity transition-transform duration-200 ease-out">
     <!-- HERO -->
     <section class="relative mx-auto max-w-6xl px-6 pb-24 pt-24">
         <!-- Background Image with Overlay -->
@@ -367,15 +470,24 @@
 
     <!-- ACCELERATED DECISION MAKING -->
     <section class="relative mx-auto max-w-6xl px-6 py-24 overflow-hidden">
-      <!-- Section Divider/Background -->
-      <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-      
-      <div class="mb-16 text-center text-white">
-        <h2 class="text-3xl font-bold">Accelerating the Decision Cycle</h2>
-        <p class="mt-4 text-slate-400">From raw signal to resolved incident in seconds.</p>
+      <div class="decision-flow">
+        <span class="flow-dot blue" style="top: 28%; left: 6%; --x1: 32vw; --y1: 4vh; --x2: 62vw; --y2: -2vh; --dur: 7s; --delay: -1.2s;"></span>
+        <span class="flow-dot purple" style="top: 40%; left: 6%; --x1: 30vw; --y1: 2vh; --x2: 60vw; --y2: 4vh; --dur: 6.5s; --delay: -3s;"></span>
+        <span class="flow-dot" style="top: 52%; left: 6%; --x1: 34vw; --y1: 8vh; --x2: 64vw; --y2: 6vh; --dur: 7.4s; --delay: -4.2s;"></span>
+        <span class="flow-dot blue" style="top: 64%; left: 6%; --x1: 30vw; --y1: 12vh; --x2: 60vw; --y2: 10vh; --dur: 8s; --delay: -2.4s;"></span>
+        <span class="flow-dot purple" style="top: 46%; left: 10%; --x1: 36vw; --y1: -2vh; --x2: 66vw; --y2: 2vh; --dur: 6.8s; --delay: -5.2s;"></span>
       </div>
 
-      <div class="grid gap-12 lg:grid-cols-2 lg:items-center">
+      <div class="relative z-10">
+        <!-- Section Divider/Background -->
+        <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+        
+        <div class="mb-16 text-center text-white">
+          <h2 class="text-3xl font-bold">Accelerating the Decision Cycle</h2>
+          <p class="mt-4 text-slate-400">From raw signal to resolved incident in seconds.</p>
+        </div>
+
+        <div class="grid gap-12 lg:grid-cols-2 lg:items-center">
         
         <!-- LEFT: AI Agents (Input/Processing) -->
         <div class="relative">
@@ -386,55 +498,67 @@
             Autonomous Agent Mesh
           </h3>
           
-          <div class="space-y-4">
+          <div id="agent-mesh" class="space-y-4">
             <!-- AGENT CARD 1 -->
-            <div class="flex items-center gap-4 rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm transition-all hover:bg-white/10">
+            <div data-agent-id="visual" role="button" tabindex="0" aria-label="Ask about Visual Anomaly Agent" class="agent-card flex items-center gap-4 rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm transition-all hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60 cursor-pointer">
               <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-500/20 text-blue-400">
                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
               </div>
               <div class="flex-1">
                 <div class="flex justify-between text-xs font-semibold text-slate-300">
                   <span>Visual Anomaly Agent</span>
-                  <span class="text-trove-lime">Active</span>
+                  <span data-agent-status class="text-trove-lime">Active</span>
                 </div>
                 <div class="mt-1 h-1.5 w-full rounded-full bg-white/10">
-                  <div class="h-1.5 w-2/3 rounded-full bg-blue-400/60"></div>
+                  <div data-agent-confidence class="h-1.5 w-2/3 rounded-full bg-blue-400/60"></div>
                 </div>
-                <div class="mt-1 text-[10px] text-slate-500 font-mono">Scanning stream ID: 894-CX...</div>
+                <div data-agent-task class="mt-1 text-[10px] text-slate-500 font-mono">Scanning stream ID: 894-CX...</div>
+                <div class="mt-1 flex items-center justify-between text-[10px] text-slate-500 font-mono">
+                  <span>Conf <span data-agent-confidence-label>78%</span></span>
+                  <span data-agent-updated>Just now</span>
+                </div>
               </div>
             </div>
 
             <!-- AGENT CARD 2 -->
-            <div class="flex items-center gap-4 rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm transition-all hover:bg-white/10" style="opacity: 0.8">
+            <div data-agent-id="audio" role="button" tabindex="0" aria-label="Ask about Audio Pattern Agent" class="agent-card flex items-center gap-4 rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm transition-all hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/60 cursor-pointer">
               <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-purple-500/20 text-purple-400">
                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
               </div>
               <div class="flex-1">
                 <div class="flex justify-between text-xs font-semibold text-slate-300">
                   <span>Audio Pattern Agent</span>
-                  <span class="text-trove-lime">Active</span>
+                  <span data-agent-status class="text-trove-lime">Active</span>
                 </div>
                 <div class="mt-1 h-1.5 w-full rounded-full bg-white/10">
-                  <div class="h-1.5 w-1/2 rounded-full bg-purple-400/60"></div>
+                  <div data-agent-confidence class="h-1.5 w-1/2 rounded-full bg-purple-400/60"></div>
                 </div>
-                <div class="mt-1 text-[10px] text-slate-500 font-mono">Matching signature: Decibel spike...</div>
+                <div data-agent-task class="mt-1 text-[10px] text-slate-500 font-mono">Matching signature: Decibel spike...</div>
+                <div class="mt-1 flex items-center justify-between text-[10px] text-slate-500 font-mono">
+                  <span>Conf <span data-agent-confidence-label>64%</span></span>
+                  <span data-agent-updated>Just now</span>
+                </div>
               </div>
             </div>
 
             <!-- AGENT CARD 3 -->
-            <div class="flex items-center gap-4 rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm transition-all hover:bg-white/10" style="opacity: 0.6">
+            <div data-agent-id="context" role="button" tabindex="0" aria-label="Ask about Context Correlation Agent" class="agent-card flex items-center gap-4 rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm transition-all hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/60 cursor-pointer">
               <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-orange-500/20 text-orange-400">
                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
               </div>
               <div class="flex-1">
                 <div class="flex justify-between text-xs font-semibold text-slate-300">
                   <span>Context Correlation Agent</span>
-                  <span class="text-slate-500">Standby</span>
+                  <span data-agent-status class="text-slate-500">Standby</span>
                 </div>
                 <div class="mt-1 h-1.5 w-full rounded-full bg-white/10">
-                  <div class="h-1.5 w-1/4 rounded-full bg-orange-400/60"></div>
+                  <div data-agent-confidence class="h-1.5 w-1/4 rounded-full bg-orange-400/60"></div>
                 </div>
-                <div class="mt-1 text-[10px] text-slate-500 font-mono">Waiting for trigger event...</div>
+                <div data-agent-task class="mt-1 text-[10px] text-slate-500 font-mono">Waiting for trigger event...</div>
+                <div class="mt-1 flex items-center justify-between text-[10px] text-slate-500 font-mono">
+                  <span>Conf <span data-agent-confidence-label>38%</span></span>
+                  <span data-agent-updated>Just now</span>
+                </div>
               </div>
             </div>
           </div>
@@ -454,10 +578,10 @@
             <div>
               <div class="mb-2 flex justify-between text-xs text-slate-400">
                 <span>Traditional Monitoring</span>
-                <span>~15-45 Minutes</span>
+                <span data-time-traditional>15-45 min</span>
               </div>
-              <div class="h-10 w-full overflow-hidden rounded bg-white/5">
-                <div class="flex h-full items-center px-3 text-[10px] font-medium text-white/50 bg-white/10 w-[95%]">
+              <div class="decision-bar traditional h-10 w-full overflow-hidden rounded bg-white/5">
+                <div data-time-bar="traditional" class="flex h-full items-center px-3 text-[10px] font-medium text-white/50 bg-white/10 w-[95%]">
                   Detection + Verification + Notification
                 </div>
               </div>
@@ -471,21 +595,23 @@
                
               <div class="mb-2 flex justify-between text-xs font-bold text-white">
                 <span>Trove AI Platform</span>
-                <span class="text-trove-lime">< 30 Seconds</span>
+                <span data-time-trove class="text-trove-lime">&lt; 30 sec</span>
               </div>
-              <div class="h-10 w-full overflow-hidden rounded bg-white/5 relative">
+              <div class="decision-bar h-10 w-full overflow-hidden rounded bg-white/5 relative">
                  <!-- Animated Bar -->
-                <div class="flex h-full items-center justify-between px-3 text-[10px] font-bold text-trove-dark bg-trove-lime w-[15%] shadow-[0_0_20px_rgba(161,195,78,0.4)]">
+                <div data-time-bar="trove" class="flex h-full items-center justify-between px-3 text-[10px] font-bold text-trove-dark bg-trove-lime w-[15%] shadow-[0_0_20px_rgba(161,195,78,0.4)]">
                   <span>AI Agent</span>
                 </div>
               </div>
             </div>
             
-            <div class="mt-8 rounded-lg border border-trove-lime/20 bg-trove-lime/5 p-4 text-center">
+            <div class="impact-pulse mt-8 rounded-lg border border-trove-lime/20 bg-trove-lime/5 p-4 text-center">
                <div class="text-3xl font-bold text-white">95%</div>
                <div class="text-xs uppercase tracking-wider text-trove-lime font-bold mt-1">Reduction in Response Latency</div>
             </div>
           </div>
+        </div>
+
         </div>
 
       </div>
@@ -721,6 +847,265 @@
 
   <script src="./chatbot.js"></script>
   <script>
+    (() => {
+      const meshRoot = document.getElementById('agent-mesh');
+      if (!meshRoot) return;
+
+      const cards = Array.from(meshRoot.querySelectorAll('[data-agent-id]'));
+      const timeTraditional = document.querySelector('[data-time-traditional]');
+      const timeTrove = document.querySelector('[data-time-trove]');
+      const barTraditional = document.querySelector('[data-time-bar="traditional"]');
+      const barTrove = document.querySelector('[data-time-bar="trove"]');
+
+      const taskBank = {
+        visual: [
+          'Scanning stream ID: 894-CX...',
+          'Flagging motion variance near Exit A7...',
+          'Reviewing occlusion event on Camera 12...',
+          'Tracking thermal delta in Zone 3...'
+        ],
+        audio: [
+          'Matching signature: decibel spike cluster...',
+          'Isolating high-frequency alert pattern...',
+          'Filtering ambient noise baseline...',
+          'Triangulating voice stress cue...'
+        ],
+        context: [
+          'Correlating camera + audio alerts...',
+          'Linking access log with motion event...',
+          'Building timeline from multi-sensor feed...',
+          'Assembling context package for review...'
+        ]
+      };
+
+      const agents = [
+        {
+          id: 'visual',
+          name: 'Visual Anomaly Agent',
+          status: 'Active',
+          currentTask: taskBank.visual[0],
+          confidence: 0.78,
+          lastUpdated: Date.now()
+        },
+        {
+          id: 'audio',
+          name: 'Audio Pattern Agent',
+          status: 'Active',
+          currentTask: taskBank.audio[0],
+          confidence: 0.64,
+          lastUpdated: Date.now()
+        },
+        {
+          id: 'context',
+          name: 'Context Correlation Agent',
+          status: 'Standby',
+          currentTask: 'Waiting for trigger event...',
+          confidence: 0.38,
+          lastUpdated: Date.now()
+        }
+      ];
+
+      let timeSnapshot = {
+        traditionalMin: 15,
+        traditionalMax: 45,
+        troveSeconds: 24
+      };
+
+      const cardMap = new Map();
+      cards.forEach((card) => {
+        cardMap.set(card.dataset.agentId, card);
+      });
+
+      function clamp(value, min, max) {
+        return Math.min(Math.max(value, min), max);
+      }
+
+      function formatRelative(ts) {
+        const delta = Date.now() - ts;
+        if (delta < 15000) return 'just now';
+        if (delta < 60000) return `${Math.max(1, Math.round(delta / 1000))}s ago`;
+        if (delta < 3600000) return `${Math.round(delta / 60000)}m ago`;
+        return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      }
+
+      function getAgentById(id) {
+        return agents.find((agent) => agent.id === id);
+      }
+
+      function pickTask(agent) {
+        const list = taskBank[agent.id] || [];
+        if (!list.length) return agent.currentTask;
+        const next = list[Math.floor(Math.random() * list.length)];
+        return next === agent.currentTask && list.length > 1
+          ? list[(list.indexOf(next) + 1) % list.length]
+          : next;
+      }
+
+      function renderAgent(agent) {
+        const card = cardMap.get(agent.id);
+        if (!card) return;
+        const statusEl = card.querySelector('[data-agent-status]');
+        const taskEl = card.querySelector('[data-agent-task]');
+        const confidenceEl = card.querySelector('[data-agent-confidence]');
+        const confidenceLabel = card.querySelector('[data-agent-confidence-label]');
+        const updatedEl = card.querySelector('[data-agent-updated]');
+
+        if (statusEl) {
+          statusEl.textContent = agent.status;
+          statusEl.classList.remove('text-trove-lime', 'text-slate-500');
+          statusEl.classList.add(agent.status === 'Active' ? 'text-trove-lime' : 'text-slate-500');
+        }
+        if (taskEl) taskEl.textContent = agent.currentTask;
+        if (confidenceEl) {
+          const percent = Math.round(agent.confidence * 100);
+          confidenceEl.style.width = `${clamp(percent, 8, 100)}%`;
+        }
+        if (confidenceLabel) {
+          confidenceLabel.textContent = `${Math.round(agent.confidence * 100)}%`;
+        }
+        if (updatedEl) updatedEl.textContent = formatRelative(agent.lastUpdated);
+
+        card.classList.toggle('opacity-80', agent.status !== 'Active');
+      }
+
+      function renderAll() {
+        agents.forEach((agent) => renderAgent(agent));
+      }
+
+      function updateTimePanel() {
+        const min = 15 + Math.floor(Math.random() * 9);
+        const max = 35 + Math.floor(Math.random() * 11);
+        const seconds = 18 + Math.floor(Math.random() * 12);
+
+        timeSnapshot = {
+          traditionalMin: min,
+          traditionalMax: max,
+          troveSeconds: seconds
+        };
+
+        if (timeTraditional) timeTraditional.textContent = `${min}-${max} min`;
+        if (timeTrove) timeTrove.textContent = `< ${seconds} sec`;
+        if (barTraditional) barTraditional.style.width = `${75 + Math.floor(Math.random() * 20)}%`;
+        if (barTrove) barTrove.style.width = `${12 + Math.floor(Math.random() * 8)}%`;
+      }
+
+      function updateAgentActivity(agent) {
+        if (agent.status !== 'Active') return;
+        agent.currentTask = pickTask(agent);
+        agent.confidence = clamp(agent.confidence + (Math.random() - 0.5) * 0.12, 0.45, 0.98);
+        agent.lastUpdated = Date.now();
+        renderAgent(agent);
+      }
+
+      function scheduleAgentUpdate() {
+        const delay = 8000 + Math.random() * 8000;
+        window.setTimeout(() => {
+          const activeAgents = agents.filter((agent) => agent.status === 'Active');
+          const target = activeAgents[Math.floor(Math.random() * activeAgents.length)];
+          if (target) updateAgentActivity(target);
+          scheduleAgentUpdate();
+        }, delay);
+      }
+
+      function scheduleTimeUpdate() {
+        const delay = 12000 + Math.random() * 12000;
+        window.setTimeout(() => {
+          updateTimePanel();
+          scheduleTimeUpdate();
+        }, delay);
+      }
+
+      function findAgent(input) {
+        const lower = (input || '').toLowerCase();
+        const direct = agents.find((agent) => lower.includes(agent.name.toLowerCase()));
+        if (direct) return direct;
+        const aliasMap = {
+          visual: ['visual', 'video', 'camera', 'anomaly'],
+          audio: ['audio', 'sound', 'acoustic', 'mic', 'noise'],
+          context: ['context', 'correlation', 'fusion', 'signal']
+        };
+        return agents.find((agent) => (aliasMap[agent.id] || []).some((alias) => lower.includes(alias)));
+      }
+
+      function setStatus(id, status, note) {
+        const agent = getAgentById(id);
+        if (!agent) return null;
+        agent.status = status;
+        if (status === 'Standby') {
+          agent.currentTask = note ? `${note}. Awaiting trigger event...` : 'Awaiting trigger event...';
+          agent.confidence = clamp(agent.confidence - 0.08, 0.25, 0.6);
+        } else {
+          agent.currentTask = note ? `${note}. ${pickTask(agent)}` : pickTask(agent);
+          agent.confidence = clamp(agent.confidence + 0.08, 0.5, 0.98);
+        }
+        agent.lastUpdated = Date.now();
+        renderAgent(agent);
+        return agent;
+      }
+
+      function explainAgent(id) {
+        const agent = getAgentById(id);
+        if (!agent) return '';
+        const confidence = Math.round(agent.confidence * 100);
+        return `${agent.name} is ${agent.status.toLowerCase()} — ${agent.currentTask} (confidence ${confidence}%, updated ${formatRelative(agent.lastUpdated)}).`;
+      }
+
+      function explainAll() {
+        return agents.map((agent) => explainAgent(agent.id)).join(' ');
+      }
+
+      function explainTimeToAction() {
+        const { traditionalMin, traditionalMax, troveSeconds } = timeSnapshot;
+        return `Traditional monitoring typically takes ${traditionalMin}-${traditionalMax} minutes for detection, verification, and notification. Trove AI compresses this to < ${troveSeconds} seconds by running the Visual Anomaly Agent, Audio Pattern Agent, and Context Correlation Agent in parallel and correlating signals immediately.`;
+      }
+
+      function askAssistant(question) {
+        if (!question) return;
+        if (window.troveAssistant && typeof window.troveAssistant.ask === 'function') {
+          window.troveAssistant.ask(question);
+          return;
+        }
+        const chatWindow = document.getElementById('ai-chat-window');
+        if (chatWindow && chatWindow.classList.contains('hidden') && window.toggleAssistant) {
+          window.toggleAssistant();
+        }
+        if (window.sendMessage) window.sendMessage(question);
+      }
+
+      function handleCardInquiry(card) {
+        const agent = getAgentById(card.dataset.agentId);
+        if (!agent) return;
+        askAssistant(`What is the ${agent.name} doing?`);
+      }
+
+      cards.forEach((card) => {
+        card.addEventListener('click', () => handleCardInquiry(card));
+        card.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            handleCardInquiry(card);
+          }
+        });
+      });
+
+      renderAll();
+      updateTimePanel();
+      scheduleAgentUpdate();
+      scheduleTimeUpdate();
+
+      window.agentMesh = {
+        agents,
+        getAgentById,
+        findAgent,
+        setStatus,
+        explainAgent,
+        explainAll,
+        getTimeToAction: () => ({ ...timeSnapshot }),
+        explainTimeToAction
+      };
+    })();
+  </script>
+  <script>
     (function () {
       const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -746,6 +1131,37 @@
 
       function clearLayer(layer) {
         while (layer.el.firstChild) layer.el.removeChild(layer.el.firstChild);
+      }
+
+      function addGlyphs(layer) {
+        const fragment = document.createDocumentFragment();
+        const glyphs = [
+          { char: 'Α', color: 'rgba(96, 165, 250, 0.18)' },
+          { char: 'Ω', color: 'rgba(161, 195, 78, 0.18)' }
+        ];
+
+        glyphs.forEach((glyph, index) => {
+          const el = document.createElement('span');
+          el.className = 'ambient-glyph';
+          el.textContent = glyph.char;
+
+          const size = 160 + Math.random() * 140;
+          const x = 6 + Math.random() * 62 + index * 12;
+          const y = 10 + Math.random() * 60 + index * 8;
+          const r = (index === 0 ? -12 : 10) + Math.random() * 6;
+          const o = 0.12 + Math.random() * 0.08;
+
+          el.style.setProperty('--size', `${size}px`);
+          el.style.setProperty('--x', `${x}vw`);
+          el.style.setProperty('--y', `${y}vh`);
+          el.style.setProperty('--r', `${r}deg`);
+          el.style.setProperty('--o', o.toFixed(2));
+          el.style.setProperty('--color', glyph.color);
+
+          fragment.appendChild(el);
+        });
+
+        layer.el.appendChild(fragment);
       }
 
       function buildCubes(layer) {
@@ -785,6 +1201,7 @@
         }
 
         layer.el.appendChild(fragment);
+        addGlyphs(layer);
       }
 
       function buildDominoes(layer) {
@@ -826,6 +1243,7 @@
         }
 
         layer.el.appendChild(fragment);
+        addGlyphs(layer);
       }
 
       function buildElectric(layer) {
@@ -865,6 +1283,7 @@
         }
 
         layer.el.appendChild(fragment);
+        addGlyphs(layer);
       }
 
       layers.forEach((layer) => layer.build(layer));
@@ -927,6 +1346,266 @@
     })();
   </script>
   
+  <canvas
+    id="intelligence-mesh"
+    class="pointer-events-none fixed bottom-6 right-6 z-30 hidden h-44 w-44 opacity-80 md:block md:h-64 md:w-64"
+    aria-hidden="true"
+  ></canvas>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script>
+    (() => {
+      const ENABLE_INTELLIGENCE_MESH = true;
+      if (!ENABLE_INTELLIGENCE_MESH) return;
+
+      const canvas = document.getElementById('intelligence-mesh');
+      if (!canvas) return;
+
+      const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+      const smallScreenQuery = window.matchMedia('(max-width: 767px)');
+
+      if (reducedMotionQuery.matches || smallScreenQuery.matches) return;
+      if (!window.WebGLRenderingContext) return;
+      if (!window.THREE) return;
+
+      const testCanvas = document.createElement('canvas');
+      const hasWebGL =
+        !!testCanvas.getContext('webgl') || !!testCanvas.getContext('experimental-webgl');
+      if (!hasWebGL) return;
+
+      let renderer;
+      let scene;
+      let camera;
+      let points;
+      let geometry;
+      let material;
+      let animationFrame = null;
+      let nextTimeout = null;
+      let active = false;
+      let startTime = 0;
+      let duration = 5;
+
+      let basePositions;
+      let noiseSeeds;
+
+      function buildMesh() {
+        const sphere = new THREE.SphereGeometry(24, 18, 14);
+        const positions = sphere.attributes.position.array;
+        const verts = [];
+
+        for (let i = 0; i < positions.length; i += 3) {
+          const x = positions[i];
+          const y = positions[i + 1];
+          const z = positions[i + 2];
+          verts.push(x, y, z);
+
+          if (y > 6 && Math.abs(x) < 8) {
+            for (let j = 0; j < 2; j += 1) {
+              verts.push(
+                x + (Math.random() - 0.5) * 1.6,
+                y + (Math.random() - 0.5) * 1.6,
+                z + (Math.random() - 0.5) * 1.6
+              );
+            }
+          }
+        }
+
+        geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+
+        basePositions = new Float32Array(verts);
+        noiseSeeds = new Float32Array(verts.length / 3);
+        for (let i = 0; i < noiseSeeds.length; i += 1) {
+          noiseSeeds[i] = Math.random() * Math.PI * 2;
+        }
+
+        const colors = new Float32Array((verts.length / 3) * 3);
+        const slate = new THREE.Color(0x6f839b);
+        const lime = new THREE.Color(0xa3c86f);
+        for (let i = 0; i < verts.length; i += 3) {
+          const y = verts[i + 1];
+          const t = Math.min(Math.max((y + 24) / 48, 0), 1);
+          const mix = 0.3 + t * 0.5;
+          const color = slate.clone().lerp(lime, mix);
+          const idx = (i / 3) * 3;
+          colors[idx] = color.r;
+          colors[idx + 1] = color.g;
+          colors[idx + 2] = color.b;
+        }
+        geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+      }
+
+      function init() {
+        renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+        renderer.setClearColor(0x000000, 0);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(36, 1, 0.1, 200);
+        camera.position.set(0, 0, 80);
+
+        buildMesh();
+
+        material = new THREE.PointsMaterial({
+          size: 1.4,
+          opacity: 0,
+          transparent: true,
+          depthWrite: false,
+          vertexColors: true,
+          blending: THREE.AdditiveBlending
+        });
+
+        points = new THREE.Points(geometry, material);
+        scene.add(points);
+
+        handleResize();
+        window.addEventListener('resize', handleResize);
+      }
+
+      function handleResize() {
+        const rect = canvas.getBoundingClientRect();
+        const width = Math.max(1, rect.width);
+        const height = Math.max(1, rect.height);
+        renderer.setSize(width, height, false);
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+      }
+
+      function easeInOut(t) {
+        return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+      }
+
+      function renderFrame(time) {
+        if (!active) return;
+        const elapsed = (time - startTime) / 1000;
+        const t = Math.min(elapsed / duration, 1);
+        const wavePhase = time * 0.0018;
+        const forward = Math.sin(t * Math.PI);
+        const ease = easeInOut(t);
+
+        const positions = geometry.getAttribute('position');
+        for (let i = 0; i < basePositions.length; i += 3) {
+          const bx = basePositions[i];
+          const by = basePositions[i + 1];
+          const bz = basePositions[i + 2];
+          const seed = noiseSeeds[i / 3];
+          const symX = Math.abs(bx);
+          const noise =
+            Math.sin(symX * 0.14 + wavePhase + seed) * 1.4 +
+            Math.cos(by * 0.12 + wavePhase * 1.2 + seed) * 1.1;
+
+          positions.array[i] = bx + noise * 0.4;
+          positions.array[i + 1] = by + Math.cos(symX * 0.1 + wavePhase + seed) * 0.35;
+          positions.array[i + 2] = bz + noise * 0.25 + forward * 12;
+        }
+
+        positions.needsUpdate = true;
+
+        const fadeIn = Math.min(t / 0.2, 1);
+        const fadeOut = t > 0.7 ? Math.max(0, 1 - (t - 0.7) / 0.3) : 1;
+        material.opacity = 0.18 * fadeIn * fadeOut;
+        material.size = 1.2 + ease * 0.7;
+
+        points.rotation.y = Math.sin(wavePhase) * 0.08;
+        points.rotation.x = Math.cos(wavePhase * 0.8) * 0.05;
+
+        renderer.render(scene, camera);
+
+        if (t >= 1) {
+          active = false;
+          material.opacity = 0;
+          animationFrame = null;
+          return;
+        }
+
+        animationFrame = requestAnimationFrame(renderFrame);
+      }
+
+      function triggerMesh() {
+        if (active) return;
+        active = true;
+        duration = 4 + Math.random() * 2;
+        startTime = performance.now();
+        animationFrame = requestAnimationFrame(renderFrame);
+      }
+
+      function scheduleNext() {
+        if (reducedMotionQuery.matches || smallScreenQuery.matches) return;
+        const wait = 30000 + Math.random() * 60000;
+        nextTimeout = window.setTimeout(() => {
+          triggerMesh();
+          scheduleNext();
+        }, wait);
+      }
+
+      function stopAll() {
+        if (nextTimeout) window.clearTimeout(nextTimeout);
+        if (animationFrame) cancelAnimationFrame(animationFrame);
+        active = false;
+        if (material) material.opacity = 0;
+      }
+
+      reducedMotionQuery.addEventListener('change', (event) => {
+        if (event.matches) stopAll();
+      });
+
+      smallScreenQuery.addEventListener('change', (event) => {
+        if (event.matches) stopAll();
+      });
+
+      init();
+      scheduleNext();
+
+      window.intelligenceMesh = {
+        trigger: triggerMesh,
+        stop: stopAll
+      };
+    })();
+  </script>
+
+  <script>
+    (() => {
+      const page = document.getElementById('page-content');
+      if (!page) return;
+
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      if (prefersReducedMotion.matches) {
+        page.classList.remove('page-enter', 'page-exit');
+        return;
+      }
+
+      page.classList.add('page-enter');
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          page.classList.remove('page-enter');
+        });
+      });
+
+      let isExiting = false;
+      document.addEventListener('click', (event) => {
+        const link = event.target.closest('a');
+        if (!link || isExiting) return;
+        if (event.defaultPrevented) return;
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        if (link.target && link.target !== '_self') return;
+
+        const href = link.getAttribute('href');
+        if (!href || href.startsWith('#')) return;
+        if (href.startsWith('mailto:') || href.startsWith('tel:')) return;
+        if (link.hasAttribute('download')) return;
+
+        const url = new URL(href, window.location.href);
+        if (url.origin !== window.location.origin) return;
+
+        event.preventDefault();
+        isExiting = true;
+        page.classList.add('page-exit');
+        window.setTimeout(() => {
+          window.location.href = url.toString();
+        }, 200);
+      });
+    })();
+  </script>
 
 </body>
 </html>

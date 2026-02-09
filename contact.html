@@ -44,6 +44,23 @@
     @media (prefers-reduced-motion: reduce) {
       .contact-flow-canvas { display: none; }
     }
+    .page-enter,
+    .page-exit {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #page-content {
+        transition: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+      }
+      .page-enter,
+      .page-exit {
+        opacity: 1 !important;
+        transform: none !important;
+      }
+    }
   </style>
 </head>
 <body class="min-h-screen bg-trove-dark font-sans text-slate-300 antialiased">
@@ -66,7 +83,7 @@
     </div>
   </header>
 
-  <main class="relative z-10">
+  <main id="page-content" class="relative z-10 transition-opacity transition-transform duration-200 ease-out">
     <!-- HERO -->
     <section class="mx-auto max-w-6xl px-6 pb-10 pt-20">
       <div class="space-y-6">
@@ -374,5 +391,48 @@
   </script>
 
   <script src="./chatbot.js"></script>
+  <script>
+    (() => {
+      const page = document.getElementById('page-content');
+      if (!page) return;
+
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      if (prefersReducedMotion.matches) {
+        page.classList.remove('page-enter', 'page-exit');
+        return;
+      }
+
+      page.classList.add('page-enter');
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          page.classList.remove('page-enter');
+        });
+      });
+
+      let isExiting = false;
+      document.addEventListener('click', (event) => {
+        const link = event.target.closest('a');
+        if (!link || isExiting) return;
+        if (event.defaultPrevented) return;
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        if (link.target && link.target !== '_self') return;
+
+        const href = link.getAttribute('href');
+        if (!href || href.startsWith('#')) return;
+        if (href.startsWith('mailto:') || href.startsWith('tel:')) return;
+        if (link.hasAttribute('download')) return;
+
+        const url = new URL(href, window.location.href);
+        if (url.origin !== window.location.origin) return;
+
+        event.preventDefault();
+        isExiting = true;
+        page.classList.add('page-exit');
+        window.setTimeout(() => {
+          window.location.href = url.toString();
+        }, 200);
+      });
+    })();
+  </script>
 </body>
 </html>
