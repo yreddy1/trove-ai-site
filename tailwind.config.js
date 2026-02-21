@@ -13,10 +13,20 @@ module.exports = {
           "Roboto",
           "sans-serif",
         ],
+        heading: [
+          "Space Grotesk",
+          "Inter",
+          "system-ui",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Segoe UI",
+          "Roboto",
+          "sans-serif",
+        ],
       },
       colors: {
         trove: {
-          dark: "#070A0F",
+          dark: "#0B1220",
           lime: "#A1C34E",
         },
       },

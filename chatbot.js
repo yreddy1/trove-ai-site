@@ -5,25 +5,14 @@
   const messagesArea = document.getElementById('ai-messages');
   const inputField = document.getElementById('ai-input');
   const micBtn = document.getElementById('mic-btn');
-  const muteBtn = document.getElementById('mute-btn');
   const GRETA_AVATAR_SRC = './greta.jpg';
   const PENDING_SPEECH_KEY = 'trove_pending_speech';
 
   let isListening = false;
-  let isMuted = false;
   let recognition;
 
-  function setMuteUi() {
-    if (!muteBtn) return;
-    if (isMuted) {
-      muteBtn.classList.add('text-slate-500');
-      muteBtn.classList.remove('text-trove-lime', 'hover:text-white');
-      muteBtn.title = 'Unmute Voice Response';
-    } else {
-      muteBtn.classList.remove('text-slate-500');
-      muteBtn.classList.add('text-trove-lime', 'hover:text-white');
-      muteBtn.title = 'Mute Voice Response';
-    }
+  function isAudioEnabled() {
+    return window.siteAudioEnabled === true;
   }
 
   function setMicUi(listening) {
@@ -82,23 +71,12 @@
   }
   window.toggleSpeech = toggleSpeech;
 
-  function toggleMute() {
-    isMuted = !isMuted;
-    if (isMuted && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
-    setMuteUi();
-  }
-  window.toggleMute = toggleMute;
-
   async function speak(text) {
-    if (isMuted || !text) return;
+    if (!isAudioEnabled() || !text) return;
 
     if (typeof window.pauseAmbientAudio === 'function') {
       window.pauseAmbientAudio();
     }
-
-    if (muteBtn) muteBtn.classList.add('animate-pulse');
 
     try {
       const response = await fetch('/api/speak', {
@@ -114,7 +92,6 @@
       const audio = new Audio(audioUrl);
 
       audio.onended = () => {
-        if (muteBtn) muteBtn.classList.remove('animate-pulse');
         URL.revokeObjectURL(audioUrl);
         if (typeof window.resumeAmbientAudio === 'function') {
           window.resumeAmbientAudio();
@@ -122,7 +99,6 @@
       };
 
       audio.onerror = () => {
-        if (muteBtn) muteBtn.classList.remove('animate-pulse');
         URL.revokeObjectURL(audioUrl);
         if (typeof window.resumeAmbientAudio === 'function') {
           window.resumeAmbientAudio();
@@ -132,7 +108,6 @@
       await audio.play();
     } catch (error) {
       console.error('TTS Error:', error);
-      if (muteBtn) muteBtn.classList.remove('animate-pulse');
 
       if ('speechSynthesis' in window) {
         const utterance = new SpeechSynthesisUtterance(text);
@@ -325,7 +300,7 @@
       const reply = data.reply || data.message;
       if (reply) {
         addMessage(reply, 'ai');
-        if (data.audio && !isMuted) {
+        if (data.audio && isAudioEnabled()) {
           playAudio(data.audio);
         } else {
           speak(reply);
@@ -376,8 +351,7 @@
   };
 
   function playAudio(base64Audio) {
-    if (isMuted || !base64Audio) return;
-    if (muteBtn) muteBtn.classList.add('animate-pulse');
+    if (!isAudioEnabled() || !base64Audio) return;
 
     if (typeof window.pauseAmbientAudio === 'function') {
       window.pauseAmbientAudio();
@@ -387,14 +361,12 @@
     const audio = new Audio(audioUrl);
 
     audio.onended = () => {
-      if (muteBtn) muteBtn.classList.remove('animate-pulse');
       if (typeof window.resumeAmbientAudio === 'function') {
         window.resumeAmbientAudio();
       }
     };
 
     audio.onerror = () => {
-      if (muteBtn) muteBtn.classList.remove('animate-pulse');
       if (typeof window.resumeAmbientAudio === 'function') {
         window.resumeAmbientAudio();
       }
@@ -435,16 +407,31 @@
   }
 
   function handleNavigation(route) {
-    const routes = {
-      home: './index.html',
-      about: './about.html',
-      solutions: './solutions.html',
-      contact: './contact.html'
+    const prefersReducedMotion =
+      window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const anchors = {
+      home: '#hero',
+      about: '#about',
+      solutions: '#solutions',
+      contact: '#contact'
     };
 
-    if (routes[route]) {
-      window.location.href = routes[route];
+    const hash = anchors[route];
+    if (!hash) return;
+
+    const target = document.querySelector(hash);
+    if (target) {
+      target.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
+      try {
+        history.pushState(null, '', hash);
+      } catch (error) {
+        window.location.hash = hash;
+      }
+      return;
     }
+
+    window.location.href = `./index.html${hash}`;
   }
 
   function generateResponse(input) {
@@ -483,8 +470,6 @@
 
     return 'Do you want information about our company, our solutions, or to contact us?';
   }
-
-  setMuteUi();
 
   const pendingSpeech = consumePendingSpeech();
   if (pendingSpeech) {
