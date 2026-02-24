@@ -466,17 +466,6 @@
           <a data-scroll-link href="#industries" class="transition-colors hover:text-trove-lime">Industries</a>
           <a data-scroll-link href="#contact" class="transition-colors hover:text-trove-lime">Contact</a>
         </nav>
-        <button
-          id="mute-btn"
-          onclick="toggleMute()"
-          class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-500 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-trove-lime/40 focus-visible:ring-offset-2 focus-visible:ring-offset-trove-dark"
-          title="Turn sound on"
-          aria-label="Toggle sound"
-          aria-pressed="false"
-          type="button"
-        >
-          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>
-        </button>
       </div>
     </div>
   </header>
@@ -488,7 +477,7 @@
         <div class="absolute inset-0 bg-trove-dark"></div>
         <video
           id="hero-video"
-          class="hero-video absolute inset-0 h-full w-full object-cover opacity-100 mix-blend-normal pointer-events-none"
+          class="hero-video absolute inset-0 h-full w-full object-cover opacity-100 mix-blend-normal pointer-events-none blur-[0.25px] scale-[1.01]"
           autoplay
           muted
           loop
@@ -527,20 +516,6 @@
               </p>
             </div>
 
-            <div class="max-w-2xl space-y-3 text-sm text-slate-300">
-              <div class="flex items-start gap-3 rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3">
-                <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-trove-lime/80"></span>
-                <p><span class="font-semibold text-white">Safety-first</span> deployments with clear accountability.</p>
-              </div>
-              <div class="flex items-start gap-3 rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3">
-                <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-trove-lime/80"></span>
-                <p><span class="font-semibold text-white">Decision-grade</span> intelligence across multi-sensor operations.</p>
-              </div>
-              <div class="flex items-start gap-3 rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3">
-                <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-trove-lime/80"></span>
-                <p><span class="font-semibold text-white">Secure, scalable</span> architecture built for integration.</p>
-              </div>
-            </div>
             <div class="flex flex-wrap gap-4 pt-1">
               <a href="mailto:info@trove-ai.com" class="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10 hover:border-white/20">
                 Book a Demo
@@ -549,6 +524,16 @@
                 Get Started Now
                 <svg class="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
               </a>
+              <button
+                id="hero-sound-btn"
+                class="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3 text-sm font-semibold text-slate-200 transition-colors hover:bg-white/10 hover:border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-trove-lime/40"
+                type="button"
+                aria-label="Toggle hero video sound"
+                aria-pressed="false"
+                title="Turn hero sound on"
+              >
+                <span data-hero-sound-icon aria-hidden="true">🔇</span>
+              </button>
             </div>
 
           </div>
@@ -1331,24 +1316,23 @@
   <script>
     (() => {
       const heroVideo = document.getElementById('hero-video');
-      const button = document.getElementById('mute-btn');
+      const button = document.getElementById('hero-sound-btn');
+      const icon = button ? button.querySelector('[data-hero-sound-icon]') : null;
       if (!button) return;
 
       let enabled = false; // OFF by default
-      let pausedByAssistant = false;
+      let pausedByVisibility = false;
 
       const updateUi = () => {
         button.setAttribute('aria-pressed', enabled ? 'true' : 'false');
-        button.title = enabled ? 'Turn sound off' : 'Turn sound on';
-        button.classList.toggle('text-trove-lime', enabled);
-        button.classList.toggle('text-slate-500', !enabled);
+        button.title = enabled ? 'Turn hero sound off' : 'Turn hero sound on';
+        if (icon) icon.textContent = enabled ? '🔊' : '🔇';
       };
 
       const apply = async () => {
-        window.siteAudioEnabled = enabled;
         if (!heroVideo) return;
 
-        if (!enabled || pausedByAssistant) {
+        if (!enabled || pausedByVisibility) {
           heroVideo.muted = true;
           heroVideo.defaultMuted = true;
           heroVideo.volume = 0;
@@ -1363,28 +1347,31 @@
           await heroVideo.play();
         } catch (e) {
           enabled = false;
-          window.siteAudioEnabled = false;
         }
       };
 
-      window.toggleMute = () => {
+      button.addEventListener('click', () => {
         enabled = !enabled;
-        pausedByAssistant = false;
+        pausedByVisibility = false;
         updateUi();
         apply();
-      };
+      });
 
-      window.pauseAmbientAudio = () => {
-        if (!enabled) return;
-        pausedByAssistant = true;
-        apply();
-      };
-
-      window.resumeAmbientAudio = () => {
-        if (!enabled) return;
-        pausedByAssistant = false;
-        apply();
-      };
+      document.addEventListener('visibilitychange', () => {
+        if (!heroVideo) return;
+        if (document.hidden) {
+          if (!heroVideo.paused && enabled) {
+            pausedByVisibility = true;
+            heroVideo.muted = true;
+            heroVideo.volume = 0;
+          }
+          return;
+        }
+        if (enabled && pausedByVisibility) {
+          pausedByVisibility = false;
+          apply();
+        }
+      });
 
       updateUi();
       apply();
