@@ -1264,6 +1264,16 @@
             </div>
         </div>
         <div class="flex items-center gap-2">
+            <button
+              id="chat-audio-toggle"
+              class="text-slate-400 hover:text-white transition-colors"
+              type="button"
+              aria-label="Toggle assistant audio"
+              aria-pressed="true"
+              title="Turn assistant audio off"
+            >
+              <span data-chat-audio-icon aria-hidden="true">🔊</span>
+            </button>
             <button onclick="toggleAssistant()" class="text-slate-400 hover:text-white">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>

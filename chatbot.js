@@ -5,14 +5,38 @@
   const messagesArea = document.getElementById('ai-messages');
   const inputField = document.getElementById('ai-input');
   const micBtn = document.getElementById('mic-btn');
+  const chatAudioBtn = document.getElementById('chat-audio-toggle');
+  const chatAudioIcon = chatAudioBtn ? chatAudioBtn.querySelector('[data-chat-audio-icon]') : null;
   const GRETA_AVATAR_SRC = './greta.jpg';
   const PENDING_SPEECH_KEY = 'trove_pending_speech';
 
   let isListening = false;
   let recognition;
+  let chatAudioEnabled = true;
+  let currentAudio = null;
 
   function isAudioEnabled() {
-    return window.siteAudioEnabled === true;
+    return chatAudioEnabled === true;
+  }
+
+  function stopAudioPlayback() {
+    try {
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+      }
+    } catch (e) {}
+    currentAudio = null;
+    if ('speechSynthesis' in window) {
+      try { window.speechSynthesis.cancel(); } catch (e) {}
+    }
+  }
+
+  function updateChatAudioUi() {
+    if (!chatAudioBtn) return;
+    chatAudioBtn.setAttribute('aria-pressed', chatAudioEnabled ? 'true' : 'false');
+    chatAudioBtn.title = chatAudioEnabled ? 'Turn assistant audio off' : 'Turn assistant audio on';
+    if (chatAudioIcon) chatAudioIcon.textContent = chatAudioEnabled ? '🔊' : '🔇';
   }
 
   function setMicUi(listening) {
@@ -71,6 +95,15 @@
   }
   window.toggleSpeech = toggleSpeech;
 
+  if (chatAudioBtn) {
+    chatAudioBtn.addEventListener('click', () => {
+      chatAudioEnabled = !chatAudioEnabled;
+      if (!chatAudioEnabled) stopAudioPlayback();
+      updateChatAudioUi();
+    });
+    updateChatAudioUi();
+  }
+
   async function speak(text) {
     if (!isAudioEnabled() || !text) return;
 
@@ -90,9 +123,11 @@
       const blob = await response.blob();
       const audioUrl = URL.createObjectURL(blob);
       const audio = new Audio(audioUrl);
+      currentAudio = audio;
 
       audio.onended = () => {
         URL.revokeObjectURL(audioUrl);
+        if (currentAudio === audio) currentAudio = null;
         if (typeof window.resumeAmbientAudio === 'function') {
           window.resumeAmbientAudio();
         }
@@ -100,6 +135,7 @@
 
       audio.onerror = () => {
         URL.revokeObjectURL(audioUrl);
+        if (currentAudio === audio) currentAudio = null;
         if (typeof window.resumeAmbientAudio === 'function') {
           window.resumeAmbientAudio();
         }
@@ -359,14 +395,17 @@
 
     const audioUrl = 'data:audio/mp3;base64,' + base64Audio;
     const audio = new Audio(audioUrl);
+    currentAudio = audio;
 
     audio.onended = () => {
+      if (currentAudio === audio) currentAudio = null;
       if (typeof window.resumeAmbientAudio === 'function') {
         window.resumeAmbientAudio();
       }
     };
 
     audio.onerror = () => {
+      if (currentAudio === audio) currentAudio = null;
       if (typeof window.resumeAmbientAudio === 'function') {
         window.resumeAmbientAudio();
       }
