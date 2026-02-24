@@ -14,9 +14,35 @@
   let recognition;
   let chatAudioEnabled = true;
   let currentAudio = null;
+  let audioUnlocked = false;
 
   function isAudioEnabled() {
     return chatAudioEnabled === true;
+  }
+
+  async function unlockAudio() {
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+
+    // Unlock audio output for browsers with gesture gating.
+    try {
+      const AudioContextImpl = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextImpl) return;
+      const ctx = new AudioContextImpl();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      gain.gain.value = 0.00001;
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.01);
+      if (ctx.state === 'suspended') await ctx.resume();
+      setTimeout(() => {
+        try { ctx.close(); } catch (e) {}
+      }, 50);
+    } catch (e) {
+      // Ignore unlock failures; we'll still attempt playback.
+    }
   }
 
   function stopAudioPlayback() {
@@ -97,6 +123,7 @@
 
   if (chatAudioBtn) {
     chatAudioBtn.addEventListener('click', () => {
+      unlockAudio();
       chatAudioEnabled = !chatAudioEnabled;
       if (!chatAudioEnabled) stopAudioPlayback();
       updateChatAudioUi();
@@ -106,6 +133,7 @@
 
   async function speak(text) {
     if (!isAudioEnabled() || !text) return;
+    unlockAudio();
 
     if (typeof window.pauseAmbientAudio === 'function') {
       window.pauseAmbientAudio();
@@ -123,6 +151,8 @@
       const blob = await response.blob();
       const audioUrl = URL.createObjectURL(blob);
       const audio = new Audio(audioUrl);
+      audio.muted = false;
+      audio.volume = 1;
       currentAudio = audio;
 
       audio.onended = () => {
@@ -152,6 +182,8 @@
             window.resumeAmbientAudio();
           }
         };
+        // Some browsers need voices initialized.
+        try { window.speechSynthesis.getVoices(); } catch (e) {}
         window.speechSynthesis.speak(utterance);
       } else if (typeof window.resumeAmbientAudio === 'function') {
         window.resumeAmbientAudio();
@@ -286,6 +318,9 @@
     const text = (rawText || '').trim();
     if (!text) return;
 
+    // Ensure audio output is unlocked from a user gesture.
+    unlockAudio();
+
     addMessage(text, 'user');
     if (usingInput && inputField) inputField.value = '';
 
@@ -388,6 +423,7 @@
 
   function playAudio(base64Audio) {
     if (!isAudioEnabled() || !base64Audio) return;
+    unlockAudio();
 
     if (typeof window.pauseAmbientAudio === 'function') {
       window.pauseAmbientAudio();
@@ -395,6 +431,8 @@
 
     const audioUrl = 'data:audio/mp3;base64,' + base64Audio;
     const audio = new Audio(audioUrl);
+    audio.muted = false;
+    audio.volume = 1;
     currentAudio = audio;
 
     audio.onended = () => {
