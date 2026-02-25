@@ -948,48 +948,94 @@
         </div>
 
         <div class="mt-12 grid gap-8 lg:grid-cols-[1.2fr_0.8fr]" data-reveal>
-          <form class="rounded-2xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-sm">
-            <div class="grid gap-5 sm:grid-cols-2">
-              <div class="sm:col-span-1">
-                <label class="text-sm font-medium text-slate-300" for="name">Name</label>
-                <input id="name" type="text" class="mt-2 w-full rounded-lg border border-white/10 bg-trove-dark px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-trove-lime/40" />
-              </div>
-              <div class="sm:col-span-1">
-                <label class="text-sm font-medium text-slate-300" for="email">Email</label>
-                <input id="email" type="email" class="mt-2 w-full rounded-lg border border-white/10 bg-trove-dark px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-trove-lime/40" />
-              </div>
-              <div class="sm:col-span-1">
-                <label class="text-sm font-medium text-slate-300" for="phone">Phone</label>
-                <input id="phone" type="tel" class="mt-2 w-full rounded-lg border border-white/10 bg-trove-dark px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-trove-lime/40" />
-              </div>
-              <div class="sm:col-span-1">
-                <label class="text-sm font-medium text-slate-300" for="organization">Organization</label>
-                <input id="organization" type="text" class="mt-2 w-full rounded-lg border border-white/10 bg-trove-dark px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-trove-lime/40" />
-              </div>
-              <div class="sm:col-span-2">
-                <label class="text-sm font-medium text-slate-300" for="reason">Reason for Contact</label>
-                <select id="reason" class="mt-2 w-full rounded-lg border border-white/10 bg-trove-dark px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-trove-lime/40">
-                  <option>Request a demo</option>
-                  <option>Partnership inquiry</option>
-                  <option>CareIQ™ information</option>
-                  <option>CyberIQ™ information</option>
-                  <option>Other</option>
-                </select>
-              </div>
-              <div class="sm:col-span-2">
-                <label class="text-sm font-medium text-slate-300" for="message">Message</label>
-                <textarea id="message" rows="5" class="mt-2 w-full rounded-lg border border-white/10 bg-trove-dark px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-trove-lime/40"></textarea>
-              </div>
+          <form
+            action="https://formspree.io/f/xjgejera"
+            method="POST"
+            data-formspree
+            class="space-y-6 rounded-2xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-sm"
+          >
+            <input type="hidden" name="_subject" value="New Trove-AI Website Inquiry">
+            <input type="hidden" name="_captcha" value="false">
+
+            <div>
+              <label class="block text-sm font-medium text-slate-300" for="contact-name">Name</label>
+              <input
+                id="contact-name"
+                type="text"
+                name="name"
+                required
+                class="mt-2 w-full rounded-lg border border-white/10 bg-trove-dark px-4 py-2 text-sm text-white placeholder:text-slate-500 focus:border-trove-lime/60 focus:outline-none focus:ring-2 focus:ring-trove-lime/40"
+              />
             </div>
-            <button type="submit" class="mt-6 rounded-lg bg-trove-lime px-5 py-3 text-sm font-semibold text-trove-dark hover:bg-white hover:text-trove-dark transition-colors">
+
+            <div>
+              <label class="block text-sm font-medium text-slate-300" for="contact-email">Email</label>
+              <input
+                id="contact-email"
+                type="email"
+                name="email"
+                required
+                class="mt-2 w-full rounded-lg border border-white/10 bg-trove-dark px-4 py-2 text-sm text-white placeholder:text-slate-500 focus:border-trove-lime/60 focus:outline-none focus:ring-2 focus:ring-trove-lime/40"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-300" for="contact-phone">Phone</label>
+              <input
+                id="contact-phone"
+                type="text"
+                name="phone"
+                class="mt-2 w-full rounded-lg border border-white/10 bg-trove-dark px-4 py-2 text-sm text-white placeholder:text-slate-500 focus:border-trove-lime/60 focus:outline-none focus:ring-2 focus:ring-trove-lime/40"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-300" for="contact-organization">Organization</label>
+              <input
+                id="contact-organization"
+                type="text"
+                name="organization"
+                class="mt-2 w-full rounded-lg border border-white/10 bg-trove-dark px-4 py-2 text-sm text-white placeholder:text-slate-500 focus:border-trove-lime/60 focus:outline-none focus:ring-2 focus:ring-trove-lime/40"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-300" for="contact-reason">Reason for Contact</label>
+              <select
+                id="contact-reason"
+                name="reason"
+                class="mt-2 w-full rounded-lg border border-white/10 bg-trove-dark px-4 py-2 text-sm text-white focus:border-trove-lime/60 focus:outline-none focus:ring-2 focus:ring-trove-lime/40"
+              >
+                <option>General Inquiry</option>
+                <option>Request Demo</option>
+                <option>Partnership</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-300" for="contact-message">Message</label>
+              <textarea
+                id="contact-message"
+                name="message"
+                rows="4"
+                required
+                class="mt-2 w-full rounded-lg border border-white/10 bg-trove-dark px-4 py-2 text-sm text-white placeholder:text-slate-500 focus:border-trove-lime/60 focus:outline-none focus:ring-2 focus:ring-trove-lime/40"
+              ></textarea>
+            </div>
+
+            <button
+              type="submit"
+              class="rounded-xl bg-trove-lime px-6 py-3 font-semibold text-slate-900 hover:opacity-90"
+            >
               Submit
             </button>
+            <p class="hidden text-sm" data-form-status></p>
           </form>
 
-          <div class="rounded-2xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-sm">
-            <h3 class="text-2xl font-semibold text-white">Direct Contact</h3>
-            <p class="mt-4 text-sm text-slate-300">
-              Solution and Partnership Inquiries:
+          <div class="rounded-2xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-sm">
+            <h3 class="text-lg font-semibold text-white">Direct Contact</h3>
+            <p class="mt-3 text-xs text-slate-300">
+              <span class="text-slate-400">Solution and Partnership Inquiries</span><br />
               <a class="font-semibold text-white hover:text-trove-lime transition-colors" href="mailto:info@trove-ai.com">info@trove-ai.com</a>
             </p>
           </div>
@@ -1397,6 +1443,60 @@
   </script>
 
   <script src="./chatbot.js"></script>
+  <script>
+    (() => {
+      const forms = Array.from(document.querySelectorAll('form[data-formspree]'));
+      if (!forms.length) return;
+
+      forms.forEach((form) => {
+        const statusEl = form.querySelector('[data-form-status]');
+        const submitBtn = form.querySelector('button[type="submit"]');
+
+        const setStatus = (message, kind) => {
+          if (!statusEl) return;
+          statusEl.textContent = message;
+          statusEl.classList.remove('hidden', 'text-slate-400', 'text-red-300', 'text-trove-lime');
+          if (kind === 'error') statusEl.classList.add('text-red-300');
+          else if (kind === 'success') statusEl.classList.add('text-trove-lime');
+          else statusEl.classList.add('text-slate-400');
+        };
+
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+
+          setStatus('Sending…', 'info');
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-60', 'cursor-not-allowed');
+          }
+
+          try {
+            const response = await fetch(form.action, {
+              method: 'POST',
+              body: new FormData(form),
+              headers: { 'Accept': 'application/json' }
+            });
+
+            if (response.ok) {
+              form.reset();
+              setStatus('Received. We’ll get back to you shortly.', 'success');
+            } else {
+              const data = await response.json().catch(() => null);
+              const message = (data && (data.error || data.message)) ? (data.error || data.message) : 'Unable to send right now. Please try again.';
+              setStatus(message, 'error');
+            }
+          } catch (error) {
+            setStatus('Network error. Please try again.', 'error');
+          } finally {
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+            }
+          }
+        });
+      });
+    })();
+  </script>
   <script>
     (() => {
       const meshRoot = document.getElementById('agent-mesh');
