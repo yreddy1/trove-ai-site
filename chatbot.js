@@ -15,6 +15,7 @@
   let chatAudioEnabled = true;
   let currentAudio = null;
   let audioUnlocked = false;
+  let pendingPlay = null;
 
   function isAudioEnabled() {
     return chatAudioEnabled === true;
@@ -22,9 +23,23 @@
 
   async function unlockAudio() {
     if (audioUnlocked) return;
-    audioUnlocked = true;
+    // Only mark unlocked once we've successfully played something
+    // in a user gesture context.
 
     // Unlock audio output for browsers with gesture gating.
+    try {
+      const silentWav =
+        'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=';
+      const unlockEl = new Audio(silentWav);
+      unlockEl.volume = 0.0001;
+      unlockEl.muted = false;
+      await unlockEl.play();
+      unlockEl.pause();
+      audioUnlocked = true;
+    } catch (e) {
+      // ignore
+    }
+
     try {
       const AudioContextImpl = window.AudioContext || window.webkitAudioContext;
       if (!AudioContextImpl) return;
@@ -43,6 +58,25 @@
     } catch (e) {
       // Ignore unlock failures; we'll still attempt playback.
     }
+  }
+
+  function queuePlayback(playFn) {
+    pendingPlay = playFn;
+    const resume = async () => {
+      if (!pendingPlay) return;
+      const fn = pendingPlay;
+      pendingPlay = null;
+      try {
+        await unlockAudio();
+        await fn();
+      } catch (e) {
+        // If it still fails, keep it queued for the next gesture.
+        pendingPlay = fn;
+      }
+    };
+
+    window.addEventListener('pointerdown', resume, { once: true, passive: true });
+    window.addEventListener('keydown', resume, { once: true });
   }
 
   function stopAudioPlayback() {
@@ -108,6 +142,8 @@
     if (!chatWindow.classList.contains('hidden') && inputField) {
       inputField.focus();
     }
+    // If the user is interacting with the assistant UI, unlock audio early.
+    unlockAudio();
   }
   window.toggleAssistant = toggleAssistant;
 
@@ -171,20 +207,32 @@
         }
       };
 
-      await audio.play();
+      try {
+        await audio.play();
+      } catch (playError) {
+        queuePlayback(() => audio.play());
+      }
     } catch (error) {
       console.error('TTS Error:', error);
 
       if ('speechSynthesis' in window) {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.onend = () => {
-          if (typeof window.resumeAmbientAudio === 'function') {
-            window.resumeAmbientAudio();
-          }
+        const speakNow = () => {
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.onend = () => {
+            if (typeof window.resumeAmbientAudio === 'function') {
+              window.resumeAmbientAudio();
+            }
+          };
+          // Some browsers need voices initialized.
+          try { window.speechSynthesis.getVoices(); } catch (e) {}
+          window.speechSynthesis.speak(utterance);
         };
-        // Some browsers need voices initialized.
-        try { window.speechSynthesis.getVoices(); } catch (e) {}
-        window.speechSynthesis.speak(utterance);
+
+        try {
+          speakNow();
+        } catch (e) {
+          queuePlayback(async () => speakNow());
+        }
       } else if (typeof window.resumeAmbientAudio === 'function') {
         window.resumeAmbientAudio();
       }
@@ -451,6 +499,7 @@
 
     audio.play().catch(e => {
       console.error('Audio play failed', e);
+      queuePlayback(() => audio.play());
       if (typeof window.resumeAmbientAudio === 'function') {
         window.resumeAmbientAudio();
       }
